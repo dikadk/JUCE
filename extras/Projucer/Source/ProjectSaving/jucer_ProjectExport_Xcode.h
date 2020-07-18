@@ -658,7 +658,7 @@ public:
 
         // This forces the project to use the legacy build system to workaround Xcode 10 issues,
         // hopefully these will be fixed in the future and this can be removed...
-        writeWorkspaceSettings();
+        //writeWorkspaceSettings();
 
         // Deleting the .rsrc files can be needed to force Xcode to update the version number.
         deleteRsrcFiles (getTargetFolder().getChildFile ("build"));
@@ -2978,7 +2978,7 @@ private:
 
     String addCustomFramework (String frameworkPath) const
     {
-        if (! frameworkPath.endsWithIgnoreCase (".framework"))
+        if (! frameworkPath.endsWithIgnoreCase (".framework") && !frameworkPath.endsWithIgnoreCase(".xcframework"))
             frameworkPath << ".framework";
 
         auto fileRefID = createFileRefID (frameworkPath);
