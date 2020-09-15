@@ -192,13 +192,13 @@ public:
     std::function<void (bool)> onPanelShowHide;
     int panelWidth = 0;
 
+    Label titleLabel;
 private:
     //==============================================================================
     Component* parent = nullptr;
     OptionalScopedPointer<Component> contentComponent;
     OptionalScopedPointer<Component> titleBarComponent;
 
-    Label titleLabel;
     ShapeButton dismissButton { "dismissButton", Colours::lightgrey, Colours::lightgrey, Colours::white };
 
     Rectangle<int> shadowArea;

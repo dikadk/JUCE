@@ -580,7 +580,9 @@ UIViewComponentPeer::~UIViewComponentPeer()
     currentTouches.deleteAllTouchesForPeer (this);
     Desktop::getInstance().removeFocusChangeListener (this);
 
-    ((JuceUIViewController*) controller)->boundsUpdater = nullptr;
+    if(controller){
+        ((JuceUIViewController*) controller)->boundsUpdater = nullptr;
+    }
 
     view->owner = nullptr;
     [view removeFromSuperview];
