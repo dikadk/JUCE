@@ -678,14 +678,7 @@ public:
                                         [this] (MemoryOutputStream& mo) { writeProjectFile (mo); });
 
         writeInfoPlistFiles();
-<<<<<<< HEAD
-
-        // This forces the project to use the legacy build system to workaround Xcode 10 issues,
-        // hopefully these will be fixed in the future and this can be removed...
-        //writeWorkspaceSettings();
-=======
         writeWorkspaceSettings();
->>>>>>> 8fc1195c353d9dd47fe9e28a8d35dbc7e205dee1
 
         // Deleting the .rsrc files can be needed to force Xcode to update the version number.
         deleteRsrcFiles (getTargetFolder().getChildFile ("build"));
