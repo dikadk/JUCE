@@ -412,11 +412,13 @@ attributes directly to these creation functions, rather than adding them later.
 
 - `PLUGIN_MANUFACTURER_CODE`
   - A four-character unique ID for your company. For AU compatibility, this must contain at least
-    one upper-case letter.
+    one upper-case letter. GarageBand 10.3 requires the first letter to be upper-case, and the
+    remaining letters to be lower-case.
 
 - `PLUGIN_CODE`
-  - A four-character unique ID for your plugin. For AU compatibility, this must contain at least
-    one upper-case letter.
+  - A four-character unique ID for your plugin. For AU compatibility, this must contain exactly one
+    upper-case letter. GarageBand 10.3 requires the first letter to be upper-case, and the remaining
+    letters to be lower-case.
 
 - `DESCRIPTION`
   - A short description of your plugin.
@@ -479,6 +481,13 @@ attributes directly to these creation functions, rather than adding them later.
 
 - `AU_SANDBOX_SAFE`
   - May be either TRUE or FALSE. Adds the appropriate entries to an AU plugin's Info.plist.
+
+- `SUPPRESS_AU_PLIST_RESOURCE_USAGE`
+  - May be either TRUE or FALSE. Defaults to FALSE. Set this to TRUE to disable the `resourceUsage`
+    key in the target's plist. This is useful for AU plugins that must access resources which cannot
+    be declared in the resourceUsage block, such as UNIX domain sockets. In particular,
+    PACE-protected AU plugins may require this option to be enabled in order for the plugin to load
+    in GarageBand.
 
 - `AAX_CATEGORY`
   - Should be one of: `AAX_ePlugInCategory_None`, `AAX_ePlugInCategory_EQ`,
