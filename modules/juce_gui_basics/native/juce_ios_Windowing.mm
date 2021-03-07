@@ -35,7 +35,7 @@ namespace juce
 
     // This is an internal list of callbacks (but currently used between modules)
     Array<AppInactivityCallback*> appBecomingInactiveCallbacks;
-}
+    }
 
 #if JUCE_PUSH_NOTIFICATIONS && defined (__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 @interface JuceAppStartupDelegate : NSObject <UIApplicationDelegate, UNUserNotificationCenterDelegate>
@@ -506,6 +506,78 @@ private:
 };
 
 //==============================================================================
+class iOSTextEditBox{
+public:
+    iOSTextEditBox(const String& title, const String& message,
+                   NSString* button1, NSString* button2, const String& textPlaceHolder,
+               std::function<void(int,const String&)>& cb)
+    : result (0), resultReceived (false), callback (cb)
+    {
+            if (currentlyFocusedPeer != nullptr)
+            {
+                UIAlertController* alert = [UIAlertController alertControllerWithTitle: juceStringToNS (title)
+                                                                               message: juceStringToNS (message)
+                                                                        preferredStyle: UIAlertControllerStyleAlert];
+                addButton (alert, button1, 0);
+                addButton (alert, button2, 1);
+                addTextEdit(alert, textPlaceHolder);
+
+                [currentlyFocusedPeer->controller presentViewController: alert
+                                                               animated: YES
+                                                             completion: nil];
+            }
+            else
+            {
+                // Since iOS8, alert windows need to be associated with a window, so you need to
+                // have at least one window on screen when you use this
+                jassertfalse;
+            }
+    }
+
+        void buttonClicked (UIAlertController* alert, const int buttonIndex) noexcept
+        {
+            result = buttonIndex;
+            
+            UITextField *alertTextField = alert.textFields.firstObject;
+                                                       
+            NSLog(@"And the text is... %@!", alertTextField.text);
+            textResult = nsStringToJuce(alertTextField.text);
+            
+            
+            callback(result, textResult);
+        
+
+            delete this;
+        }
+
+    private:
+        int result;
+        String textResult;
+        bool resultReceived;
+        std::function<void(int, const String&)> callback;
+
+        void addButton (UIAlertController* alert, NSString* text, int index)
+        {
+            if (text != nil)
+                [alert addAction: [UIAlertAction actionWithTitle: text
+                                                           style: UIAlertActionStyleDefault
+                                                         handler: ^(UIAlertAction*) {
+                    this->buttonClicked (alert, index); }]];
+        }
+    
+        void addTextEdit (UIAlertController* alert, const String& text)
+        {
+            if (text.isNotEmpty()){
+                [alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                    textField.placeholder = juceStringToNS(text);
+                }];
+            }
+        }
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (iOSTextEditBox)
+};
+
+//==============================================================================
 #if JUCE_MODAL_LOOPS_PERMITTED
 void JUCE_CALLTYPE NativeMessageBox::showMessageBox (AlertWindow::AlertIconType /*iconType*/,
                                                      const String& title, const String& message,
@@ -568,6 +640,14 @@ int JUCE_CALLTYPE NativeMessageBox::showYesNoBox (AlertWindow::AlertIconType /*i
 
     mb.release();
     return 0;
+}
+
+void JUCE_CALLTYPE NativeMessageBox::showTextEditBox (const String& title, const String& message,
+                                                        const String& textPlaceholder,
+                                                        std::function<void(int, const String&)> callback)
+{
+    std::unique_ptr<iOSTextEditBox> mb (new iOSTextEditBox (title, message, @"Cancel", @"Save", textPlaceholder, callback));
+    mb.release();
 }
 
 //==============================================================================

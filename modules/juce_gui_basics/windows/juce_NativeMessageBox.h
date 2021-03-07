@@ -26,15 +26,15 @@
 namespace juce
 {
 
-//==============================================================================
-/**
+  //==============================================================================
+  /**
     This class contains some static methods for showing native alert windows.
 
     @tags{GUI}
 */
-class NativeMessageBox
-{
-public:
+  class NativeMessageBox
+  {
+  public:
     /** Shows a dialog box that just has a message and a single 'ok' button to close it.
 
         The box is shown modally, and the method will block until the user has clicked its
@@ -47,12 +47,12 @@ public:
                             alert window should be associated with. Depending on the look
                             and feel, this might be used for positioning of the alert window.
     */
-   #if JUCE_MODAL_LOOPS_PERMITTED || DOXYGEN
-    static void JUCE_CALLTYPE showMessageBox (AlertWindow::AlertIconType iconType,
-                                              const String& title,
-                                              const String& message,
-                                              Component* associatedComponent = nullptr);
-   #endif
+#if JUCE_MODAL_LOOPS_PERMITTED || DOXYGEN
+    static void JUCE_CALLTYPE showMessageBox(AlertWindow::AlertIconType iconType,
+                                             const String &title,
+                                             const String &message,
+                                             Component *associatedComponent = nullptr);
+#endif
 
     /** Shows a dialog box that just has a message and a single 'ok' button to close it.
 
@@ -74,11 +74,11 @@ public:
 
         @see ModalCallbackFunction
     */
-    static void JUCE_CALLTYPE showMessageBoxAsync (AlertWindow::AlertIconType iconType,
-                                                    const String& title,
-                                                    const String& message,
-                                                    Component* associatedComponent = nullptr,
-                                                    ModalComponentManager::Callback* callback = nullptr);
+    static void JUCE_CALLTYPE showMessageBoxAsync(AlertWindow::AlertIconType iconType,
+                                                  const String &title,
+                                                  const String &message,
+                                                  Component *associatedComponent = nullptr,
+                                                  ModalComponentManager::Callback *callback = nullptr);
 
     /** Shows a dialog box with two buttons.
 
@@ -111,16 +111,16 @@ public:
 
         @see ModalCallbackFunction
     */
-    static bool JUCE_CALLTYPE showOkCancelBox (AlertWindow::AlertIconType iconType,
-                                               const String& title,
-                                               const String& message,
-                                            #if JUCE_MODAL_LOOPS_PERMITTED
-                                               Component* associatedComponent = nullptr,
-                                               ModalComponentManager::Callback* callback = nullptr);
-                                            #else
-                                               Component* associatedComponent,
-                                               ModalComponentManager::Callback* callback);
-                                            #endif
+    static bool JUCE_CALLTYPE showOkCancelBox(AlertWindow::AlertIconType iconType,
+                                              const String &title,
+                                              const String &message,
+#if JUCE_MODAL_LOOPS_PERMITTED
+                                              Component *associatedComponent = nullptr,
+                                              ModalComponentManager::Callback *callback = nullptr);
+#else
+                                              Component *associatedComponent,
+                                              ModalComponentManager::Callback *callback);
+#endif
 
     /** Shows a dialog box with three buttons.
 
@@ -157,16 +157,16 @@ public:
 
         @see ModalCallbackFunction
     */
-    static int JUCE_CALLTYPE showYesNoCancelBox (AlertWindow::AlertIconType iconType,
-                                                 const String& title,
-                                                 const String& message,
-                                               #if JUCE_MODAL_LOOPS_PERMITTED
-                                                 Component* associatedComponent = nullptr,
-                                                 ModalComponentManager::Callback* callback = nullptr);
-                                               #else
-                                                 Component* associatedComponent,
-                                                 ModalComponentManager::Callback* callback);
-                                               #endif
+    static int JUCE_CALLTYPE showYesNoCancelBox(AlertWindow::AlertIconType iconType,
+                                                const String &title,
+                                                const String &message,
+#if JUCE_MODAL_LOOPS_PERMITTED
+                                                Component *associatedComponent = nullptr,
+                                                ModalComponentManager::Callback *callback = nullptr);
+#else
+                                                Component *associatedComponent,
+                                                ModalComponentManager::Callback *callback);
+#endif
 
     /** Shows a dialog box with two buttons.
 
@@ -202,20 +202,25 @@ public:
 
         @see ModalCallbackFunction
     */
-    static int JUCE_CALLTYPE showYesNoBox (AlertWindow::AlertIconType iconType,
-                                           const String& title,
-                                           const String& message,
-                                          #if JUCE_MODAL_LOOPS_PERMITTED
-                                           Component* associatedComponent = nullptr,
-                                           ModalComponentManager::Callback* callback = nullptr);
-                                          #else
-                                           Component* associatedComponent,
-                                           ModalComponentManager::Callback* callback);
-                                          #endif
+    static int JUCE_CALLTYPE showYesNoBox(AlertWindow::AlertIconType iconType,
+                                          const String &title,
+                                          const String &message,
+#if JUCE_MODAL_LOOPS_PERMITTED
+                                          Component *associatedComponent = nullptr,
+                                          ModalComponentManager::Callback *callback = nullptr);
+#else
+                                          Component *associatedComponent,
+                                          ModalComponentManager::Callback *callback);
+#endif
 
-private:
+    static void JUCE_CALLTYPE showTextEditBox(const String &title,
+                                              const String &message,
+                                              const String &textPlaceholder,
+                                              std::function<void(int, const String&)> callback);
+
+  private:
     NativeMessageBox() = delete;
-    JUCE_DECLARE_NON_COPYABLE (NativeMessageBox)
-};
+    JUCE_DECLARE_NON_COPYABLE(NativeMessageBox)
+  };
 
 } // namespace juce

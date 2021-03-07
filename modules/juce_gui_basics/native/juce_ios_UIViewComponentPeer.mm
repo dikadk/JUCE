@@ -557,11 +557,6 @@ UIViewComponentPeer::~UIViewComponentPeer()
     currentTouches.deleteAllTouchesForPeer (this);
     Desktop::getInstance().removeFocusChangeListener (this);
 
-    //My fix for errors on iOS with controller becoming nil
-    if(controller){
-        ((JuceUIViewController*) controller)->boundsUpdater = nullptr;
-    }
-
 
     view->owner = nullptr;
     [view removeFromSuperview];

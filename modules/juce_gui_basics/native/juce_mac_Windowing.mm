@@ -153,6 +153,15 @@ int JUCE_CALLTYPE NativeMessageBox::showYesNoBox (AlertWindow::AlertIconType ico
                                 "Yes", "No", nullptr, callback != nullptr);
 }
 
+int JUCE_CALLTYPE NativeMessageBox::showTextEditBox (const String& title, const String& message,
+                                                  Component* /*associatedComponent*/,
+                                                  ModalComponentManager::Callback* callback)
+{
+    //TOdo
+    return OSXMessageBox::show (iconType, title, message, callback,
+                                "Yes", "No", nullptr, callback != nullptr);
+}
+
 
 //==============================================================================
 static NSRect getDragRect (NSView* view, NSEvent* event)
