@@ -216,6 +216,7 @@ namespace juce
     static void JUCE_CALLTYPE showTextEditBox(const String &title,
                                               const String &message,
                                               const String &textPlaceholder,
+                                              const String  &prepopulatedText,
                                               std::function<void(int, const String&)> callback);
 
   private:

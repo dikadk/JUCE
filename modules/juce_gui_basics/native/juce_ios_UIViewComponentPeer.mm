@@ -659,6 +659,16 @@ void UIViewComponentPeer::setFullScreen (bool shouldBeFullScreen)
         component.repaint();
     }
 }
+BorderSize<int> UIViewComponentPeer::getSafeAreaInsets() const
+{
+    if (@available(iOS 11.0, *))
+    {
+        auto i = view.safeAreaInsets;
+        return { roundToInt (i.top), roundToInt (i.left), roundToInt (i.bottom), roundToInt (i.right) };
+    }
+
+    return {};
+}
 
 void UIViewComponentPeer::updateScreenBounds()
 {

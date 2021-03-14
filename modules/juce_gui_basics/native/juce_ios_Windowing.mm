@@ -508,9 +508,7 @@ private:
 //==============================================================================
 class iOSTextEditBox{
 public:
-    iOSTextEditBox(const String& title, const String& message,
-                   NSString* button1, NSString* button2, const String& textPlaceHolder,
-               std::function<void(int,const String&)>& cb)
+    iOSTextEditBox(const String& title, const String& message, NSString* button1, NSString* button2, const String& textPlaceHolder, const String& prepopulatedText, std::function<void(int,const String&)>& cb)
     : result (0), resultReceived (false), callback (cb)
     {
             if (currentlyFocusedPeer != nullptr)
@@ -520,7 +518,7 @@ public:
                                                                         preferredStyle: UIAlertControllerStyleAlert];
                 addButton (alert, button1, 0);
                 addButton (alert, button2, 1);
-                addTextEdit(alert, textPlaceHolder);
+                addTextEdit(alert, prepopulatedText, textPlaceHolder);
 
                 [currentlyFocusedPeer->controller presentViewController: alert
                                                                animated: YES
@@ -565,11 +563,12 @@ public:
                     this->buttonClicked (alert, index); }]];
         }
     
-        void addTextEdit (UIAlertController* alert, const String& text)
+        void addTextEdit (UIAlertController* alert, const String& prepopulatedText, const String& text)
         {
             if (text.isNotEmpty()){
                 [alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
                     textField.placeholder = juceStringToNS(text);
+                    textField.text = juceStringToNS(prepopulatedText);
                 }];
             }
         }
@@ -644,9 +643,10 @@ int JUCE_CALLTYPE NativeMessageBox::showYesNoBox (AlertWindow::AlertIconType /*i
 
 void JUCE_CALLTYPE NativeMessageBox::showTextEditBox (const String& title, const String& message,
                                                         const String& textPlaceholder,
+                                                        const String& prepopulatedText,
                                                         std::function<void(int, const String&)> callback)
 {
-    std::unique_ptr<iOSTextEditBox> mb (new iOSTextEditBox (title, message, @"Cancel", @"Save", textPlaceholder, callback));
+    std::unique_ptr<iOSTextEditBox> mb (new iOSTextEditBox (title, message, @"Cancel", @"Save", textPlaceholder, prepopulatedText, callback));
     mb.release();
 }
 
