@@ -39,6 +39,12 @@ class JUCE_API ContentSharer  : public DeletedAtShutdown
 public:
     JUCE_DECLARE_SINGLETON (ContentSharer, false)
 
+    /**
+     * Sets the parent component to be used in subsequent calls to iOS native sharer.
+     * Required to make ContentSharer work in AUv3 plugins.
+     */
+    void setParentComponent(Component* parentComponent, Component* sourceComponent = nullptr);
+
     /** Shares the given files. Each URL should be either a full file path
         or it should point to a resource within the application bundle. For
         resources on iOS it should be something like "content/image.png" if you
@@ -110,6 +116,9 @@ private:
     std::function<void (bool, String)> callback;
 
   #if JUCE_CONTENT_SHARING
+    Component* parentComponent = nullptr;
+    Component::SafePointer<Component> sourceComponent;
+
     struct Pimpl
     {
         virtual ~Pimpl() {}

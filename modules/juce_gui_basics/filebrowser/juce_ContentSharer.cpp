@@ -150,6 +150,21 @@ JUCE_IMPLEMENT_SINGLETON (ContentSharer)
 ContentSharer::ContentSharer() {}
 ContentSharer::~ContentSharer() { clearSingletonInstance(); }
 
+void ContentSharer::setParentComponent(Component* parentComponentToUse, Component* sourceComponentToUse) {
+   #if JUCE_CONTENT_SHARING
+    jassert(pimpl == nullptr);
+
+    parentComponent = parentComponentToUse;
+    sourceComponent = sourceComponentToUse;
+   #else
+    ignoreUnused (parentComponentToUse);
+    ignoreUnused (sourceComponentToUse);
+
+    // Content sharing is not available on this platform!
+    jassertfalse;
+   #endif
+}
+
 void ContentSharer::shareFiles (const Array<URL>& files,
                                 std::function<void (bool, const String&)> callbackToUse)
 {
