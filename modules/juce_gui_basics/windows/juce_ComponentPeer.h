@@ -149,7 +149,7 @@ public:
         relative to the parent window's origin, not the screen origin.
     */
     virtual Rectangle<int> getBounds() const = 0;
-    
+
     /** Returns the safe area insets imposed by non-rectangular device screen shapes */
     virtual BorderSize<int> getSafeAreaInsets() const { return {}; };
 
