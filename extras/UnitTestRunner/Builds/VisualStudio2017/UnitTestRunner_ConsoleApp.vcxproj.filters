@@ -631,6 +631,9 @@
     <ClCompile Include="..\..\..\..\modules\juce_audio_basics\synthesisers\juce_Synthesiser.cpp">
       <Filter>JUCE Modules\juce_audio_basics\synthesisers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\modules\juce_audio_basics\utilities\juce_ADSR_test.cpp">
+      <Filter>JUCE Modules\juce_audio_basics\utilities</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\modules\juce_audio_basics\utilities\juce_IIRFilter.cpp">
       <Filter>JUCE Modules\juce_audio_basics\utilities</Filter>
     </ClCompile>
@@ -1207,6 +1210,9 @@
     <ClCompile Include="..\..\..\..\modules\juce_audio_processors\utilities\juce_ParameterAttachments.cpp">
       <Filter>JUCE Modules\juce_audio_processors\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\modules\juce_audio_processors\utilities\juce_PluginHostType.cpp">
+      <Filter>JUCE Modules\juce_audio_processors\utilities</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\modules\juce_audio_processors\utilities\juce_RangedAudioParameter.cpp">
       <Filter>JUCE Modules\juce_audio_processors\utilities</Filter>
     </ClCompile>
@@ -1484,6 +1490,9 @@
       <Filter>JUCE Modules\juce_core\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\modules\juce_core\native\juce_posix_NamedPipe.cpp">
+      <Filter>JUCE Modules\juce_core\native</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\modules\juce_core\native\juce_wasm_SystemStats.cpp">
       <Filter>JUCE Modules\juce_core\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\modules\juce_core\native\juce_win32_Files.cpp">
@@ -3129,6 +3138,9 @@
     <ClInclude Include="..\..\..\..\modules\juce_audio_devices\native\oboe\include\oboe\Version.h">
       <Filter>JUCE Modules\juce_audio_devices\native\oboe\include\oboe</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\modules\juce_audio_devices\native\oboe\src\aaudio\AAudioExtensions.h">
+      <Filter>JUCE Modules\juce_audio_devices\native\oboe\src\aaudio</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\modules\juce_audio_devices\native\oboe\src\aaudio\AAudioLoader.h">
       <Filter>JUCE Modules\juce_audio_devices\native\oboe\src\aaudio</Filter>
     </ClInclude>
@@ -3876,6 +3888,9 @@
     <ClInclude Include="..\..\..\..\modules\juce_audio_processors\utilities\juce_ParameterAttachments.h">
       <Filter>JUCE Modules\juce_audio_processors\utilities</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\modules\juce_audio_processors\utilities\juce_PluginHostType.h">
+      <Filter>JUCE Modules\juce_audio_processors\utilities</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\modules\juce_audio_processors\utilities\juce_RangedAudioParameter.h">
       <Filter>JUCE Modules\juce_audio_processors\utilities</Filter>
     </ClInclude>
@@ -4176,10 +4191,16 @@
     <ClInclude Include="..\..\..\..\modules\juce_core\native\juce_BasicNativeHeaders.h">
       <Filter>JUCE Modules\juce_core\native</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\modules\juce_core\native\juce_intel_SharedCode.h">
+      <Filter>JUCE Modules\juce_core\native</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\modules\juce_core\native\juce_mac_CFHelpers.h">
+      <Filter>JUCE Modules\juce_core\native</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\modules\juce_core\native\juce_mac_ClangBugWorkaround.h">
       <Filter>JUCE Modules\juce_core\native</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\modules\juce_core\native\juce_osx_ObjCHelpers.h">
+    <ClInclude Include="..\..\..\..\modules\juce_core\native\juce_mac_ObjCHelpers.h">
       <Filter>JUCE Modules\juce_core\native</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\modules\juce_core\native\juce_posix_IPAddress.h">
@@ -5160,6 +5181,9 @@
     <ClInclude Include="..\..\..\..\modules\juce_gui_basics\native\juce_MultiTouchMapper.h">
       <Filter>JUCE Modules\juce_gui_basics\native</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\modules\juce_gui_basics\native\juce_win32_ScopedThreadDPIAwarenessSetter.h">
+      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\modules\juce_gui_basics\positioning\juce_MarkerList.h">
       <Filter>JUCE Modules\juce_gui_basics\positioning</Filter>
     </ClInclude>
@@ -5545,6 +5569,9 @@
     </None>
     <None Include="..\..\..\..\modules\juce_audio_processors\format_types\VST3_SDK\public.sdk\README.md">
       <Filter>JUCE Modules\juce_audio_processors\format_types\VST3_SDK\public.sdk</Filter>
+    </None>
+    <None Include="..\..\..\..\modules\juce_audio_processors\format_types\VST3_SDK\JUCE_README.txt">
+      <Filter>JUCE Modules\juce_audio_processors\format_types\VST3_SDK</Filter>
     </None>
     <None Include="..\..\..\..\modules\juce_audio_processors\format_types\VST3_SDK\LICENSE.txt">
       <Filter>JUCE Modules\juce_audio_processors\format_types\VST3_SDK</Filter>

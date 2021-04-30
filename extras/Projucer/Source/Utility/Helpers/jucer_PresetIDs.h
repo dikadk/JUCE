@@ -103,6 +103,7 @@ namespace Ids
     DECLARE_ID (customLaunchStoryboard);
     DECLARE_ID (customXcodeResourceFolders);
     DECLARE_ID (plistPreprocessorDefinitions);
+    DECLARE_ID (applicationCategory);
     DECLARE_ID (customPList);
     DECLARE_ID (pListPrefixHeader);
     DECLARE_ID (pListPreprocess);
@@ -377,6 +378,7 @@ namespace Ids
     DECLARE_ID (liveBuildEnabled);
     DECLARE_ID (guiEditorEnabled);
     DECLARE_ID (jucerFormatVersion);
+    DECLARE_ID (buildNumber);
 
     const Identifier ID ("id");
     const Identifier ID_uppercase ("ID");

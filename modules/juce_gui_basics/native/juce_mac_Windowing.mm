@@ -392,6 +392,7 @@ namespace juce {
 
     static std::unique_ptr<ScreenSaverDefeater> screenSaverDefeater;
 
+<<<<<<< HEAD
     void Desktop::setScreenSaverEnabled(const bool isEnabled) {
         if (isEnabled)
             screenSaverDefeater.reset();
@@ -422,13 +423,49 @@ namespace juce {
         static std::function<void()> forceDisplayUpdate;
 
         JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL (DisplaySettingsChangeCallback)
+=======
+//==============================================================================
+struct DisplaySettingsChangeCallback  : private DeletedAtShutdown
+{
+    DisplaySettingsChangeCallback()
+    {
+        CGDisplayRegisterReconfigurationCallback (displayReconfigurationCallback, this);
+    }
+
+    ~DisplaySettingsChangeCallback()
+    {
+        CGDisplayRemoveReconfigurationCallback (displayReconfigurationCallback, this);
+        clearSingletonInstance();
+    }
+
+    static void displayReconfigurationCallback (CGDirectDisplayID, CGDisplayChangeSummaryFlags, void* userInfo)
+    {
+        if (auto* thisPtr = static_cast<DisplaySettingsChangeCallback*> (userInfo))
+            if (thisPtr->forceDisplayUpdate != nullptr)
+                thisPtr->forceDisplayUpdate();
+    }
+
+    std::function<void()> forceDisplayUpdate;
+
+    JUCE_DECLARE_SINGLETON (DisplaySettingsChangeCallback, false)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DisplaySettingsChangeCallback)
+};
+>>>>>>> e9b26887ddde90b5a62d020504f14cf859c56b9e
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DisplaySettingsChangeCallback)
     };
 
+<<<<<<< HEAD
     JUCE_IMPLEMENT_SINGLETON (DisplaySettingsChangeCallback)
 
     std::function<void()> DisplaySettingsChangeCallback::forceDisplayUpdate = nullptr;
+=======
+static Rectangle<int> convertDisplayRect (NSRect r, CGFloat mainScreenBottom)
+{
+    r.origin.y = mainScreenBottom - (r.origin.y + r.size.height);
+    return convertToRectInt (r);
+}
+>>>>>>> e9b26887ddde90b5a62d020504f14cf859c56b9e
 
     static Rectangle<int> convertDisplayRect(NSRect r, CGFloat mainScreenBottom) {
         r.origin.y = mainScreenBottom - (r.origin.y + r.size.height);
@@ -453,12 +490,21 @@ namespace juce {
         NSSize dpi = [[[s deviceDescription] objectForKey:NSDeviceResolution] sizeValue];
         d.dpi = (dpi.width + dpi.height) / 2.0;
 
+<<<<<<< HEAD
         return d;
     }
 
     void Displays::findDisplays(const float masterScale) {
         JUCE_AUTORELEASEPOOL {
             auto &settingsChangeCallback = *DisplaySettingsChangeCallback::getInstance();
+=======
+void Displays::findDisplays (const float masterScale)
+{
+    JUCE_AUTORELEASEPOOL
+    {
+        if (DisplaySettingsChangeCallback::getInstanceWithoutCreating() == nullptr)
+            DisplaySettingsChangeCallback::getInstance()->forceDisplayUpdate = [this] { refresh(); };
+>>>>>>> e9b26887ddde90b5a62d020504f14cf859c56b9e
 
             if (settingsChangeCallback.forceDisplayUpdate == nullptr)
                 settingsChangeCallback.forceDisplayUpdate = [this] { refresh(); };
