@@ -317,10 +317,8 @@ public:
 
     void bindVertexArray() noexcept
     {
-       #if JUCE_OPENGL3
         if (vertexArrayObject != 0)
             context.extensions.glBindVertexArray (vertexArrayObject);
-       #endif
     }
 
     void checkViewportBounds()
@@ -480,6 +478,7 @@ public:
             {
                 repaintEvent.wait (-1);
                 renderFrame();
+                repaintEvent.reset();
             }
             else
            #endif
@@ -515,25 +514,21 @@ public:
         context.makeActive();
        #endif
 
-        context.extensions.initialise();
+        gl::loadFunctions();
 
-       #if JUCE_OPENGL3
         if (OpenGLShaderProgram::getLanguageVersion() > 1.2)
         {
             context.extensions.glGenVertexArrays (1, &vertexArrayObject);
             bindVertexArray();
         }
-       #endif
 
         glViewport (0, 0, component.getWidth(), component.getHeight());
 
         nativeContext->setSwapInterval (1);
 
-       #if ! JUCE_OPENGL_ES
         JUCE_CHECK_OPENGL_ERROR
         shadersAvailable = OpenGLShaderProgram::getLanguageVersion() > 0;
         clearGLError();
-       #endif
 
         if (context.renderer != nullptr)
             context.renderer->newOpenGLContextCreated();
@@ -555,10 +550,8 @@ public:
         if (context.renderer != nullptr)
             context.renderer->openGLContextClosing();
 
-       #if JUCE_OPENGL3
         if (vertexArrayObject != 0)
             context.extensions.glDeleteVertexArrays (1, &vertexArrayObject);
-       #endif
 
         associatedObjectNames.clear();
         associatedObjects.clear();
@@ -661,14 +654,12 @@ public:
     Rectangle<int> viewportArea, lastScreenBounds;
     double scale = 1.0;
     AffineTransform transform;
-   #if JUCE_OPENGL3
     GLuint vertexArrayObject = 0;
-   #endif
 
     StringArray associatedObjectNames;
     ReferenceCountedArray<ReferenceCountedObject> associatedObjects;
 
-    WaitableEvent canPaintNowFlag, finishedPaintingFlag, repaintEvent;
+    WaitableEvent canPaintNowFlag, finishedPaintingFlag, repaintEvent { true };
    #if JUCE_OPENGL_ES
     bool shadersAvailable = true;
    #else

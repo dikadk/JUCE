@@ -236,4 +236,68 @@ namespace juce
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SidePanel)
     };
 
+<<<<<<< HEAD
+=======
+    //==============================================================================
+    /** You can assign a lambda to this callback object and it will be called when the panel is moved. */
+    std::function<void()> onPanelMove;
+
+    /** You can assign a lambda to this callback object and it will be called when the panel is shown or hidden. */
+    std::function<void (bool)> onPanelShowHide;
+
+    //==============================================================================
+    /** @internal */
+    void moved() override;
+    /** @internal */
+    void resized() override;
+    /** @internal */
+    void paint (Graphics& g) override;
+    /** @internal */
+    void parentHierarchyChanged() override;
+    /** @internal */
+    void mouseDrag (const MouseEvent&) override;
+    /** @internal */
+    void mouseUp (const MouseEvent&) override;
+    /** @internal */
+    std::unique_ptr<AccessibilityHandler> createAccessibilityHandler() override;
+
+private:
+    //==============================================================================
+    Component* parent = nullptr;
+    OptionalScopedPointer<Component> contentComponent;
+    OptionalScopedPointer<Component> titleBarComponent;
+
+    Label titleLabel;
+    ShapeButton dismissButton { "dismissButton", Colours::lightgrey, Colours::lightgrey, Colours::white };
+
+    Rectangle<int> shadowArea;
+
+    bool isOnLeft = false;
+    bool isShowing = false;
+
+    int panelWidth = 0;
+    int shadowWidth = 15;
+    int titleBarHeight = 40;
+
+    Rectangle<int> startingBounds;
+    bool shouldResize = false;
+    int amountMoved = 0;
+
+    bool shouldShowDismissButton = true;
+
+    //==============================================================================
+    void lookAndFeelChanged() override;
+    void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
+    void changeListenerCallback (ChangeBroadcaster*) override;
+
+    Rectangle<int> calculateBoundsInParent (Component&) const;
+    void calculateAndRemoveShadowBounds (Rectangle<int>& bounds);
+
+    bool isMouseEventInThisOrChildren (Component*);
+
+    //==============================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SidePanel)
+};
+
+>>>>>>> 61619ec0d52ac79e3d5d57674b80161096fb6dc1
 } // namespace juce

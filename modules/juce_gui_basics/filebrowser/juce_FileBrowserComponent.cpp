@@ -605,7 +605,7 @@ void FileBrowserComponent::getRoots (StringArray& rootNames, StringArray& rootPa
 
 void FileBrowserComponent::timerCallback()
 {
-    const bool isProcessActive = Process::isForegroundProcess();
+    const auto isProcessActive = isForegroundOrEmbeddedProcess (this);
 
     if (wasProcessActive != isProcessActive)
     {
@@ -614,6 +614,12 @@ void FileBrowserComponent::timerCallback()
         if (isProcessActive && fileList != nullptr)
             refresh();
     }
+}
+
+//==============================================================================
+std::unique_ptr<AccessibilityHandler> FileBrowserComponent::createAccessibilityHandler()
+{
+    return std::make_unique<AccessibilityHandler> (*this, AccessibilityRole::group);
 }
 
 } // namespace juce

@@ -415,6 +415,8 @@ struct TextEditor::Iterator
 
     void beginNewLine()
     {
+        ++currentLineIndex;
+
         lineY += lineHeight * lineSpacing;
         float lineWidth = 0;
 
@@ -495,14 +497,6 @@ struct TextEditor::Iterator
                               atomX, (float) roundToInt (lineY + lineHeight - maxDescent));
             ga.draw (g, transform);
         }
-    }
-
-    void addSelection (RectangleList<float>& area, Range<int> selected) const
-    {
-        auto startX = indexToX (selected.getStart());
-        auto endX   = indexToX (selected.getEnd());
-
-        area.add (startX, lineY, endX - startX, lineHeight * lineSpacing);
     }
 
     void drawUnderline (Graphics& g, Range<int> underline, Colour colour, AffineTransform transform) const
@@ -657,8 +651,36 @@ struct TextEditor::Iterator
         return roundToInt (maxWidth);
     }
 
+    std::vector<Range<int>> getLineRanges()
+    {
+        std::vector<Range<int>> ranges;
+
+        int index = currentLineIndex;
+        Range<int> currentLineRange;
+
+        while (next())
+        {
+            if (index < currentLineIndex)
+            {
+                currentLineRange.setEnd (indexInText - 1);
+                ranges.push_back (currentLineRange);
+
+                currentLineRange = { indexInText, indexInText };
+                index = currentLineIndex;
+            }
+        }
+
+        currentLineRange.setEnd (atom != nullptr ? indexInText + atom->numChars
+                                                 : indexInText);
+
+        if (! currentLineRange.isEmpty())
+            ranges.push_back (currentLineRange);
+
+        return ranges;
+    }
+
     //==============================================================================
-    int indexInText = 0;
+    int indexInText = 0, currentLineIndex = 0;
     float lineY = 0, lineHeight = 0, maxDescent = 0;
     float atomX = 0, atomRight = 0;
     const TextAtom* atom = nullptr;
@@ -702,9 +724,14 @@ private:
         if (shouldStartNewLine)
         {
             if (split == numRemaining)
+            {
                 beginNewLine();
+            }
             else
+            {
+                ++currentLineIndex;
                 lineY += lineHeight * lineSpacing;
+            }
         }
 
         atomRight = atomX + longAtom.width;
@@ -1010,6 +1037,7 @@ void TextEditor::setReadOnly (bool shouldBeReadOnly)
     {
         readOnly = shouldBeReadOnly;
         enablementChanged();
+        invalidateAccessibilityHandler();
     }
 }
 
@@ -1143,6 +1171,9 @@ void TextEditor::updateCaretPosition()
         Iterator i (*this);
         caret->setCaretPosition (getCaretRectangle().translated (leftIndent,
                                                                  topIndent + roundToInt (i.getYOffset())));
+
+        if (auto* handler = getAccessibilityHandler())
+            handler->notifyAccessibilityEvent (AccessibilityEvent::textSelectionChanged);
     }
 }
 
@@ -1276,6 +1307,20 @@ void TextEditor::textChanged()
         valueTextNeedsUpdating = false;
         textValue = getText();
     }
+
+    if (auto* handler = getAccessibilityHandler())
+        handler->notifyAccessibilityEvent (AccessibilityEvent::textChanged);
+}
+
+void TextEditor::setSelection (Range<int> newSelection) noexcept
+{
+    if (newSelection != selection)
+    {
+        selection = newSelection;
+
+        if (auto* handler = getAccessibilityHandler())
+            handler->notifyAccessibilityEvent (AccessibilityEvent::textSelectionChanged);
+    }
 }
 
 void TextEditor::returnPressed()    { postCommandMessage (TextEditorDefs::returnKeyMessageId); }
@@ -1358,6 +1403,9 @@ void TextEditor::moveCaret (int newCaretPos)
 
         scrollToMakeSureCursorIsVisible();
         updateCaretPosition();
+
+        if (auto* handler = getAccessibilityHandler())
+            handler->notifyAccessibilityEvent (AccessibilityEvent::textChanged);
     }
 }
 
@@ -1422,6 +1470,42 @@ Rectangle<float> TextEditor::getCaretRectangleFloat() const
     getCharPosition (caretPosition, anchor, cursorHeight);
 
     return { anchor.x, anchor.y, 2.0f, cursorHeight };
+}
+
+Point<int> TextEditor::getTextOffset() const noexcept
+{
+    Iterator i (*this);
+    auto yOffset = i.getYOffset();
+
+    return { getLeftIndent() + borderSize.getLeft() - viewport->getViewPositionX(),
+             roundToInt ((float) getTopIndent() + (float) borderSize.getTop() + yOffset) - viewport->getViewPositionY() };
+}
+
+RectangleList<int> TextEditor::getTextBounds (Range<int> textRange)
+{
+    RectangleList<int> boundingBox;
+
+    for (auto lineRange : Iterator { *this }.getLineRanges())
+    {
+        auto intersection = lineRange.getIntersectionWith (textRange);
+
+        if (! intersection.isEmpty())
+        {
+            Point<float> anchorStart, anchorEnd;
+            float lineHeight = 0.0f;
+
+            getCharPosition (intersection.getStart(), anchorStart, lineHeight);
+            getCharPosition (intersection.getEnd(),   anchorEnd,   lineHeight);
+
+            boundingBox.add (Rectangle<float> (anchorStart.x, anchorStart.y, anchorEnd.x - anchorStart.x, lineHeight).toNearestInt());
+
+            if (intersection == textRange)
+                break;
+        }
+    }
+
+    boundingBox.offsetAll (getTextOffset());
+    return boundingBox;
 }
 
 //==============================================================================
@@ -1548,14 +1632,14 @@ void TextEditor::moveCaretTo (const int newPosition, const bool isSelecting)
             if (getCaretPosition() >= selection.getEnd())
                 dragType = draggingSelectionEnd;
 
-            selection = Range<int>::between (getCaretPosition(), selection.getEnd());
+            setSelection (Range<int>::between (getCaretPosition(), selection.getEnd()));
         }
         else
         {
             if (getCaretPosition() < selection.getStart())
                 dragType = draggingSelectionStart;
 
-            selection = Range<int>::between (getCaretPosition(), selection.getStart());
+            setSelection (Range<int>::between (getCaretPosition(), selection.getStart()));
         }
 
         repaintText (selection.getUnionWith (oldSelection));
@@ -1567,16 +1651,16 @@ void TextEditor::moveCaretTo (const int newPosition, const bool isSelecting)
         repaintText (selection);
 
         moveCaret (newPosition);
-        selection = Range<int>::emptyRange (getCaretPosition());
+        setSelection (Range<int>::emptyRange (getCaretPosition()));
     }
 }
 
-int TextEditor::getTextIndexAt (const int x, const int y)
+int TextEditor::getTextIndexAt (const int x, const int y) const
 {
-    Iterator i (*this);
+    const auto offset = getTextOffset();
 
-    return indexAtPosition ((float) (x + viewport->getViewPositionX() - leftIndent - borderSize.getLeft()),
-                            (float) (y + viewport->getViewPositionY() - topIndent  - borderSize.getTop()) - i.getYOffset());
+    return indexAtPosition ((float) (x - offset.x),
+                            (float) (y - offset.y));
 }
 
 void TextEditor::insertTextAtCaret (const String& t)
@@ -1661,22 +1745,14 @@ void TextEditor::drawContent (Graphics& g)
 
         if (! selection.isEmpty())
         {
-            Iterator i2 (i);
-            RectangleList<float> selectionArea;
-
-            while (i2.next() && i2.lineY < (float) clip.getBottom())
-            {
-                if (i2.lineY + i2.lineHeight >= (float) clip.getY()
-                    && selection.intersects ({ i2.indexInText, i2.indexInText + i2.atom->numChars }))
-                {
-                    i2.addSelection (selectionArea, selection);
-                }
-            }
-
             selectedTextColour = findColour (highlightedTextColourId);
 
             g.setColour (findColour (highlightColourId).withMultipliedAlpha (hasKeyboardFocus (true) ? 1.0f : 0.5f));
-            g.fillPath (selectionArea.toPath(), transform);
+
+            auto boundingBox = getTextBounds (selection);
+            boundingBox.offsetAll (-getTextOffset());
+
+            g.fillPath (boundingBox.toPath(), transform);
         }
 
         const UniformTextSection* lastSection = nullptr;
@@ -2019,7 +2095,7 @@ bool TextEditor::deleteBackwards (bool moveInWholeWordSteps)
     if (moveInWholeWordSteps)
         moveCaretTo (findWordBreakBefore (getCaretPosition()), true);
     else if (selection.isEmpty() && selection.getStart() > 0)
-        selection = { selection.getEnd() - 1, selection.getEnd() };
+        setSelection ({ selection.getEnd() - 1, selection.getEnd() });
 
     cut();
     return true;
@@ -2028,7 +2104,7 @@ bool TextEditor::deleteBackwards (bool moveInWholeWordSteps)
 bool TextEditor::deleteForwards (bool /*moveInWholeWordSteps*/)
 {
     if (selection.isEmpty() && selection.getStart() < getTotalNumChars())
-        selection = { selection.getStart(), selection.getStart() + 1 };
+        setSelection ({ selection.getStart(), selection.getStart() + 1 });
 
     cut();
     return true;
@@ -2520,7 +2596,7 @@ void TextEditor::getCharPosition (int index, Point<float>& anchor, float& lineHe
     }
 }
 
-int TextEditor::indexAtPosition (const float x, const float y)
+int TextEditor::indexAtPosition (const float x, const float y) const
 {
     if (getWordWrapWidth() > 0)
     {
@@ -2614,6 +2690,87 @@ void TextEditor::coalesceSimilarSections()
             --i;
         }
     }
+}
+
+//==============================================================================
+class TextEditorAccessibilityHandler  : public AccessibilityHandler
+{
+public:
+    explicit TextEditorAccessibilityHandler (TextEditor& textEditorToWrap)
+        : AccessibilityHandler (textEditorToWrap,
+                                textEditorToWrap.isReadOnly() ? AccessibilityRole::staticText : AccessibilityRole::editableText,
+                                {},
+                                { std::make_unique<TextEditorTextInterface> (textEditorToWrap) })
+    {
+    }
+
+private:
+    class TextEditorTextInterface  : public AccessibilityTextInterface
+    {
+    public:
+        explicit TextEditorTextInterface (TextEditor& editor)
+            : textEditor (editor)
+        {
+        }
+
+        bool isDisplayingProtectedText() const override      { return textEditor.getPasswordCharacter() != 0; }
+        bool isReadOnly() const override                     { return textEditor.isReadOnly(); }
+
+        int getTotalNumCharacters() const override           { return textEditor.getText().length(); }
+        Range<int> getSelection() const override             { return textEditor.getHighlightedRegion(); }
+
+        void setSelection (Range<int> r) override
+        {
+            if (r.isEmpty())
+                textEditor.setCaretPosition (r.getStart());
+            else
+                textEditor.setHighlightedRegion (r);
+        }
+
+        String getText (Range<int> r) const override
+        {
+            if (isDisplayingProtectedText())
+                return String::repeatedString (String::charToString (textEditor.getPasswordCharacter()),
+                                               getTotalNumCharacters());
+
+            return textEditor.getTextInRange (r);
+        }
+
+        void setText (const String& newText) override
+        {
+            textEditor.setText (newText);
+        }
+
+        int getTextInsertionOffset() const override          { return textEditor.getCaretPosition(); }
+
+        RectangleList<int> getTextBounds (Range<int> textRange) const override
+        {
+            auto localRects = textEditor.getTextBounds (textRange);
+            RectangleList<int> globalRects;
+
+            std::for_each (localRects.begin(), localRects.end(),
+                           [&] (const Rectangle<int>& r) { globalRects.add (textEditor.localAreaToGlobal (r)); });
+
+            return globalRects;
+        }
+
+        int getOffsetAtPoint (Point<int> point) const override
+        {
+            auto localPoint = textEditor.getLocalPoint (nullptr, point);
+            return textEditor.getTextIndexAt (localPoint.x, localPoint.y);
+        }
+
+    private:
+        TextEditor& textEditor;
+    };
+
+    //==============================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TextEditorAccessibilityHandler)
+};
+
+std::unique_ptr<AccessibilityHandler> TextEditor::createAccessibilityHandler()
+{
+    return std::make_unique<TextEditorAccessibilityHandler> (*this);
 }
 
 } // namespace juce

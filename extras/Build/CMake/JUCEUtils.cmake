@@ -385,11 +385,7 @@ function(_juce_get_platform_plugin_kinds out)
     endif()
 
     if(NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
-        list(APPEND result AAX Unity VST)
-
-        if(NOT MINGW AND NOT MSYS)
-            list(APPEND result VST3)
-        endif()
+        list(APPEND result AAX Unity VST VST3)
     endif()
 
     set(${out} ${result} PARENT_SCOPE)
@@ -674,7 +670,7 @@ function(juce_add_module module_path)
 
         _juce_link_libs_from_metadata("${module_name}" "${metadata_dict}" linuxLibs)
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        if((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC"))
+        if((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC"))
             if(module_name STREQUAL "juce_gui_basics")
                 target_compile_options(${module_name} INTERFACE /bigobj)
             endif()
@@ -1048,6 +1044,14 @@ function(_juce_set_output_name target name)
     endif()
 endfunction()
 
+function(_juce_check_icon_files_exist icon_files)
+    foreach(file IN LISTS icon_files)
+        if(NOT EXISTS "${file}")
+            message(FATAL_ERROR "Could not find icon file: ${file}")
+        endif()
+    endforeach()
+endfunction()
+
 function(_juce_generate_icon source_target dest_target)
     get_target_property(juce_library_code ${source_target} JUCE_GENERATED_SOURCES_DIRECTORY)
     get_target_property(juce_property_icon_big ${source_target} JUCE_ICON_BIG)
@@ -1070,6 +1074,8 @@ function(_juce_generate_icon source_target dest_target)
             return()
         endif()
 
+        _juce_check_icon_files_exist("${icon_args}")
+
         set(generated_icon "${juce_library_code}/Icon.icns")
         # To get compiled properly, we need the icon before the plist is generated!
         _juce_execute_juceaide(macicon "${generated_icon}" ${icon_args})
@@ -1079,12 +1085,16 @@ function(_juce_generate_icon source_target dest_target)
             return()
         endif()
 
+        _juce_check_icon_files_exist("${icon_args}")
+
         set(generated_icon "${juce_library_code}/icon.ico")
         _juce_execute_juceaide(winicon "${generated_icon}" ${icon_args})
     elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS")
         get_target_property(generated_icon ${source_target} JUCE_CUSTOM_XCASSETS_FOLDER)
 
         if(icon_args AND (NOT generated_icon))
+            _juce_check_icon_files_exist("${icon_args}")
+
             set(out_path "${juce_library_code}/${dest_target}")
             set(generated_icon "${out_path}/Images.xcassets")
 
@@ -1108,6 +1118,8 @@ function(_juce_generate_icon source_target dest_target)
     endif()
 
     if(generated_icon)
+        _juce_check_icon_files_exist("${generated_icon}")
+
         target_sources(${dest_target} PRIVATE ${generated_icon})
         set_target_properties(${source_target} ${dest_target} PROPERTIES
             JUCE_ICON_FILE "${generated_icon}"
@@ -1288,6 +1300,7 @@ function(_juce_create_windows_package source_target dest_target extension defaul
 
     set_target_properties(${dest_target}
         PROPERTIES
+        PDB_OUTPUT_DIRECTORY "${products_folder}"
         LIBRARY_OUTPUT_DIRECTORY "${output_folder}/Contents/${arch_string}")
 
     get_target_property(icon_file ${source_target} JUCE_ICON_FILE)
@@ -2216,13 +2229,13 @@ function(juce_add_pip header)
     _juce_get_metadata("${metadata_dict}" name JUCE_PIP_NAME)
 
     if(NOT JUCE_PIP_NAME)
-        message(FATAL_ERROR "PIP headers must declare a `name` field")
+        message(FATAL_ERROR "Error in '${header}': PIP headers must declare a `name` field")
     endif()
 
     string(MAKE_C_IDENTIFIER "${JUCE_PIP_NAME}" pip_name_sanitised)
 
     if(NOT JUCE_PIP_NAME STREQUAL pip_name_sanitised)
-        message(FATAL_ERROR "PIP `name` value '${JUCE_PIP_NAME}' must be a valid C identifier")
+        message(FATAL_ERROR "Error in '${header}': PIP `name` value '${JUCE_PIP_NAME}' must be a valid C identifier")
     endif()
 
     if(TARGET "${JUCE_PIP_NAME}")
@@ -2231,13 +2244,13 @@ function(juce_add_pip header)
     endif()
 
     if(TARGET "${JUCE_PIP_NAME}")
-        message(FATAL_ERROR "Could not create a unique target name for PIP ${header}")
+        message(FATAL_ERROR "Error in '${header}': Could not create a unique target name for PIP ${header}")
     endif()
 
     _juce_get_metadata("${metadata_dict}" type pip_kind)
 
     if(NOT pip_kind)
-        message(FATAL_ERROR "PIP headers must declare a `type` field")
+        message(FATAL_ERROR "Error in '${header}': PIP headers must declare a `type` field")
     endif()
 
     _juce_get_metadata("${metadata_dict}" pluginCharacteristics pip_charateristics)
@@ -2284,7 +2297,7 @@ function(juce_add_pip header)
         set(source_main "${JUCE_CMAKE_UTILS_DIR}/PIPConsole.cpp.in")
         juce_add_console_app(${JUCE_PIP_NAME} ${extra_target_args})
     else()
-        message(FATAL_ERROR "PIP kind must be either AudioProcessor, Component, or Console")
+        message(FATAL_ERROR "Error in '${header}': PIP kind must be either AudioProcessor, Component, or Console")
     endif()
 
     if(NOT ARGV1 STREQUAL "")
@@ -2314,7 +2327,7 @@ function(juce_add_pip header)
         if(TARGET "${module}")
             set(discovered_module "${module}")
         else()
-            message(FATAL_ERROR "No such module: ${module}")
+            message(FATAL_ERROR "Error in '${header}': No such module: ${module}")
         endif()
 
         target_link_libraries(${JUCE_PIP_NAME} PRIVATE ${discovered_module})
