@@ -61,14 +61,21 @@
 
 #pragma once
 
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wshadow-field-in-constructor",
+                                     "-Wnon-virtual-dtor")
+
 #include <pluginterfaces/base/ftypes.h>
 #include <pluginterfaces/base/funknown.h>
 #include <pluginterfaces/vst/ivsthostapplication.h>
 
+JUCE_END_IGNORE_WARNINGS_GCC_LIKE
+
 namespace reaper
 {
     JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wzero-as-null-pointer-constant",
-                                         "-Wunused-parameter")
+                                         "-Wunused-parameter",
+                                         "-Wnon-virtual-dtor")
+    JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4100)
 
     using namespace Steinberg;
     using INT_PTR = pointer_sized_int;
@@ -85,6 +92,7 @@ namespace reaper
     DEF_CLASS_IID (IReaperHostApplication)
     DEF_CLASS_IID (IReaperUIEmbedInterface)
 
+    JUCE_END_IGNORE_WARNINGS_MSVC
     JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 }
 
@@ -96,6 +104,8 @@ struct EmbeddedViewListener
                                                          Steinberg::TPtrInt parm2,
                                                          Steinberg::TPtrInt parm3) = 0;
 };
+
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wnon-virtual-dtor")
 
 //==============================================================================
 class EmbeddedUI : public reaper::IReaperUIEmbedInterface
@@ -129,6 +139,8 @@ private:
     EmbeddedViewListener& listener;
     std::atomic<int> refCount { 1 };
 };
+
+JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
 //==============================================================================
 class Editor : public AudioProcessorEditor

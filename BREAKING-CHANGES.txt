@@ -6,6 +6,93 @@ Develop
 
 Change
 ------
+The JUCE_GLSL_VERSION preprocessor definition has been removed.
+
+Possible Issues
+---------------
+Code which used this definition will no longer compile.
+
+Workaround
+----------
+Use OpenGLHelpers::getGLSLVersionString to retrieve a version string which is
+consistent with the capabilities of the current OpenGL context.
+
+Rationale
+---------
+A compile-time version string is not very useful, as OpenGL versions and
+capabilities can change at runtime. Replacing this macro with a function allows
+querying the capabilities of the current context at runtime.
+
+
+Change
+------
+The minimum support CMake version is now 3.15.
+
+Possible Issues
+---------------
+It will no longer be possible to configure JUCE projects with CMake versions
+between 3.12 and 3.14 inclusive.
+
+Workaround
+----------
+No workaround is available.
+
+Rationale
+---------
+Moving to 3.15 allows us to use target_link_directories and
+target_link_options, which were introduced in 3.13, which in turn allows us to
+provide support for bundled precompiled libraries in modules. Plugins already
+required CMake 3.15, so this change just brings other target types in line with
+the requirements for plugins.
+
+
+Change
+------
+The default value of JUCE_MODAL_LOOPS_PERMITTED has been changed from 1 to 0.
+
+Possible Issues
+---------------
+With JUCE_MODAL_LOOPS_PERMITTED set to 0 code that previously relied upon modal
+loops will need to be rewritten to use asynchronous versions of the modal
+functions. There is no non-modal alternative to
+AlterWindow::showNativeDialogBox and the previously modal behaviour of the
+MultiDocumentPanel destructor has changed.
+
+Workaround
+----------
+Set JUCE_MODAL_LOOPS_PERMITTED back to 1.
+
+Rationale
+---------
+Modal operations are a frequent source of problems, particularly when used in
+plug-ins. On Android modal loops are not possible, so people wanting to target
+Android often have an unwelcome surprise when then have to rewrite what they
+assumed to be platform independent code. Changing the default addresses these
+problems.
+
+
+Change
+------
+The minimum supported C++ standard is now C++14 and the oldest supported
+compilers on macOS and Linux are now Xcode 9.2, GCC 5.0 and Clang 3.4.
+
+Possible Issues
+---------------
+Older compilers will no longer be able to compile JUCE. People using Xcode 8.5
+on OS X 10.11 will need to update the operating system to OS X 10.12 to be able
+to use Xcode 9.2.
+
+Workaround
+----------
+No workaround is available.
+
+Rationale
+---------
+This compiler upgrade will allow the use of C++14 within the framework.
+
+
+Change
+------
 Platform GL headers are no longer included in juce_opengl.h
 
 Possible Issues

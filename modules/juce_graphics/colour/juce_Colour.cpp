@@ -82,12 +82,12 @@ namespace ColourHelpers
 
             lightness = ((float) (hi + lo) / 2.0f) / 255.0f;
 
-            if (lightness < 0.0f)
+            if (lightness <= 0.0f)
                 return;
 
             hue = getHue (col);
 
-            if (1.0f < lightness)
+            if (1.0f <= lightness)
                 return;
 
             auto denominator = 1.0f - std::abs ((2.0f * lightness) - 1.0f);
@@ -460,7 +460,7 @@ Colour Colour::withMultipliedLightness (float amount) const noexcept
 //==============================================================================
 Colour Colour::brighter (float amount) const noexcept
 {
-    jassert (0.0f <= amount && amount <= 1.0f);
+    jassert (amount >= 0.0f);
     amount = 1.0f / (1.0f + amount);
 
     return Colour ((uint8) (255 - (amount * (255 - getRed()))),
@@ -471,7 +471,7 @@ Colour Colour::brighter (float amount) const noexcept
 
 Colour Colour::darker (float amount) const noexcept
 {
-    jassert (0.0f <= amount && amount <= 1.0f);
+    jassert (amount >= 0.0f);
     amount = 1.0f / (1.0f + amount);
 
     return Colour ((uint8) (amount * getRed()),

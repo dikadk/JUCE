@@ -47,6 +47,7 @@ namespace juce
                             alert window should be associated with. Depending on the look
                             and feel, this might be used for positioning of the alert window.
     */
+
 #if JUCE_MODAL_LOOPS_PERMITTED || DOXYGEN
     static void JUCE_CALLTYPE showMessageBox(AlertWindow::AlertIconType iconType,
                                              const String &title,
@@ -216,8 +217,8 @@ namespace juce
     static void JUCE_CALLTYPE showTextEditBox(const String &title,
                                               const String &message,
                                               const String &textPlaceholder,
-                                              const String  &prepopulatedText,
-                                              std::function<void(int, const String&)> callback);
+                                              const String &prepopulatedText,
+                                              std::function<void(int, const String &)> callback);
 
   private:
     NativeMessageBox() = delete;
