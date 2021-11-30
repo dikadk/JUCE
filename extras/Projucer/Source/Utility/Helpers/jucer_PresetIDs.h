@@ -151,6 +151,8 @@ namespace Ids
     DECLARE_ID (windowsTargetPlatformVersion);
     DECLARE_ID (debugInformationFormat);
     DECLARE_ID (IPPLibrary);
+    DECLARE_ID (IPP1ALibrary);
+    DECLARE_ID (MKL1ALibrary);
     DECLARE_ID (msvcModuleDefinitionFile);
     DECLARE_ID (bigIcon);
     DECLARE_ID (smallIcon);
@@ -258,6 +260,7 @@ namespace Ids
     DECLARE_ID (iosPushNotifications);
     DECLARE_ID (iosAppGroups);
     DECLARE_ID (iCloudPermissions);
+    DECLARE_ID (networkingMulticast);
     DECLARE_ID (iosDevelopmentTeamID);
     DECLARE_ID (iosAppGroupsId);
     DECLARE_ID (iosBluetoothPermissionNeeded);

@@ -95,7 +95,8 @@ public:
     CachedImage (OpenGLContext& c, Component& comp,
                  const OpenGLPixelFormat& pixFormat, void* contextToShare)
         : ThreadPoolJob ("OpenGL Rendering"),
-          context (c), component (comp)
+          context (c),
+          component (comp)
     {
         nativeContext.reset (new NativeContext (component, pixFormat, contextToShare,
                                                 c.useMultisampling, c.versionRequired));
@@ -116,7 +117,8 @@ public:
     {
         if (nativeContext != nullptr)
         {
-            renderThread.reset (new ThreadPool (1));
+            renderThread = std::make_unique<ThreadPool> (1);
+            renderThread->setThreadPriorities (9);
             resume();
         }
     }
@@ -159,6 +161,13 @@ public:
 
     void resume()
     {
+       #if JUCE_MAC
+        initialDisplayTopLeft = Desktop::getInstance().getDisplays()
+                                                      .getDisplayForRect (component.getTopLevelComponent()->getScreenBounds())
+                                                      ->totalArea
+                                                      .getTopLeft();
+       #endif
+
         if (renderThread != nullptr)
             renderThread->addJob (this, false);
     }
@@ -301,10 +310,26 @@ public:
 
     void updateViewportSize (bool canTriggerUpdate)
     {
+        JUCE_ASSERT_MESSAGE_THREAD
+
         if (auto* peer = component.getPeer())
         {
             auto localBounds = component.getLocalBounds();
-            auto displayScale = Desktop::getInstance().getDisplays().getDisplayForRect (component.getTopLevelComponent()->getScreenBounds())->scale;
+            const auto currentDisplay = Desktop::getInstance().getDisplays().getDisplayForRect (component.getTopLevelComponent()->getScreenBounds());
+
+            if (currentDisplay != lastDisplay)
+            {
+               #if JUCE_MAC
+                if (cvDisplayLinkWrapper != nullptr)
+                {
+                    cvDisplayLinkWrapper->updateActiveDisplay (currentDisplay->totalArea.getTopLeft());
+                    nativeContext->setNominalVideoRefreshPeriodS (cvDisplayLinkWrapper->getNominalVideoRefreshPeriodS());
+                }
+               #endif
+                lastDisplay = currentDisplay;
+            }
+
+            const auto displayScale = currentDisplay->scale;
 
             auto newArea = peer->getComponent().getLocalArea (&component, localBounds).withZeroOrigin() * displayScale;
 
@@ -335,8 +360,9 @@ public:
 
     void bindVertexArray() noexcept
     {
-        if (vertexArrayObject != 0)
-            context.extensions.glBindVertexArray (vertexArrayObject);
+        if (openGLVersion.major >= 3)
+            if (vertexArrayObject != 0)
+                context.extensions.glBindVertexArray (vertexArrayObject);
     }
 
     void checkViewportBounds()
@@ -344,7 +370,10 @@ public:
         auto screenBounds = component.getTopLevelComponent()->getScreenBounds();
 
         if (lastScreenBounds != screenBounds)
+        {
             updateViewportSize (true);
+            lastScreenBounds = screenBounds;
+        }
     }
 
     void paintComponent()
@@ -458,7 +487,7 @@ public:
     JobStatus runJob() override
     {
         {
-            // Allow the message thread to finish setting-up the context before using it..
+            // Allow the message thread to finish setting-up the context before using it.
             MessageManager::Lock::ScopedTryLockType mmLock (messageManagerLock, false);
 
             do
@@ -484,6 +513,7 @@ public:
             if (backgroundProcessCheck.isBackgroundProcess())
             {
                 repaintEvent.wait (300);
+                repaintEvent.reset();
                 continue;
             }
            #endif
@@ -492,11 +522,10 @@ public:
                 break;
 
            #if JUCE_MAC
-            if (cvDisplayLinkWrapper != nullptr)
+            if (context.continuousRepaint)
             {
                 repaintEvent.wait (-1);
                 renderFrame();
-                repaintEvent.reset();
             }
             else
            #endif
@@ -504,6 +533,8 @@ public:
                 repaintEvent.wait (5); // failed to render, so avoid a tight fail-loop.
             else if (! context.continuousRepaint && ! shouldExit())
                 repaintEvent.wait (-1);
+
+            repaintEvent.reset();
         }
 
         hasInitialised = false;
@@ -516,7 +547,7 @@ public:
 
     bool initialiseOnThread()
     {
-        // On android, this can get called twice, so drop any previous state..
+        // On android, this can get called twice, so drop any previous state.
         associatedObjectNames.clear();
         associatedObjects.clear();
         cachedImageFrameBuffer.release();
@@ -534,19 +565,23 @@ public:
 
         gl::loadFunctions();
 
-        if (OpenGLShaderProgram::getLanguageVersion() > 1.2)
+        openGLVersion = getOpenGLVersion();
+
+        if (openGLVersion.major >= 3)
         {
             context.extensions.glGenVertexArrays (1, &vertexArrayObject);
             bindVertexArray();
         }
 
-        glViewport (0, 0, component.getWidth(), component.getHeight());
+        glViewport (0, 0, viewportArea.getWidth(), viewportArea.getHeight());
 
         nativeContext->setSwapInterval (1);
 
+       #if ! JUCE_OPENGL_ES
         JUCE_CHECK_OPENGL_ERROR
         shadersAvailable = OpenGLShaderProgram::getLanguageVersion() > 0;
         clearGLError();
+       #endif
 
         textureNpotSupported = contextHasTextureNpotFeature();
 
@@ -554,8 +589,9 @@ public:
             context.renderer->newOpenGLContextCreated();
 
        #if JUCE_MAC
-        if (context.continuousRepaint)
-            cvDisplayLinkWrapper = std::make_unique<CVDisplayLinkWrapper> (this);
+        cvDisplayLinkWrapper = std::make_unique<CVDisplayLinkWrapper> (*this);
+        cvDisplayLinkWrapper->updateActiveDisplay (initialDisplayTopLeft);
+        nativeContext->setNominalVideoRefreshPeriodS (cvDisplayLinkWrapper->getNominalVideoRefreshPeriodS());
        #endif
 
         return true;
@@ -652,7 +688,7 @@ public:
         }
         else
         {
-            jassertfalse; // you called execute AFTER you detached your openglcontext
+            jassertfalse; // you called execute AFTER you detached your OpenGLContext
         }
     }
 
@@ -669,12 +705,17 @@ public:
     OpenGLContext& context;
     Component& component;
 
+    Version openGLVersion;
     OpenGLFrameBuffer cachedImageFrameBuffer;
     RectangleList<int> validArea;
     Rectangle<int> viewportArea, lastScreenBounds;
+    const Displays::Display* lastDisplay = nullptr;
     double scale = 1.0;
     AffineTransform transform;
     GLuint vertexArrayObject = 0;
+   #if JUCE_MAC
+    Point<int> initialDisplayTopLeft;
+   #endif
 
     StringArray associatedObjectNames;
     ReferenceCountedArray<ReferenceCountedObject> associatedObjects;
@@ -692,11 +733,34 @@ public:
    #if JUCE_MAC
     struct CVDisplayLinkWrapper
     {
-        CVDisplayLinkWrapper (CachedImage* im)
+        explicit CVDisplayLinkWrapper (CachedImage& cachedImageIn)
+            : cachedImage (cachedImageIn),
+              continuousRepaint (cachedImageIn.context.continuousRepaint.load())
         {
             CVDisplayLinkCreateWithActiveCGDisplays (&displayLink);
-            CVDisplayLinkSetOutputCallback (displayLink, &displayLinkCallback, im);
+            CVDisplayLinkSetOutputCallback (displayLink, &displayLinkCallback, this);
             CVDisplayLinkStart (displayLink);
+        }
+
+        double getNominalVideoRefreshPeriodS() const
+        {
+            const auto nominalVideoRefreshPeriod = CVDisplayLinkGetNominalOutputVideoRefreshPeriod (displayLink);
+
+            if ((nominalVideoRefreshPeriod.flags & kCVTimeIsIndefinite) == 0)
+                return (double) nominalVideoRefreshPeriod.timeValue / (double) nominalVideoRefreshPeriod.timeScale;
+
+            return 0.0;
+        }
+
+        void updateActiveDisplay (Point<int> topLeftOfDisplay)
+        {
+            CGDirectDisplayID displayID;
+            uint32_t numDisplays = 0;
+            constexpr uint32_t maxNumDisplays = 1;
+            CGGetDisplaysWithPoint (convertToCGPoint (topLeftOfDisplay), maxNumDisplays, &displayID, &numDisplays);
+
+            if (numDisplays == 1)
+                CVDisplayLinkSetCurrentCGDisplay (displayLink, displayID);
         }
 
         ~CVDisplayLinkWrapper()
@@ -708,11 +772,16 @@ public:
         static CVReturn displayLinkCallback (CVDisplayLinkRef, const CVTimeStamp*, const CVTimeStamp*,
                                              CVOptionFlags, CVOptionFlags*, void* displayLinkContext)
         {
-            auto* self = (CachedImage*) displayLinkContext;
-            self->repaintEvent.signal();
+            auto* self = reinterpret_cast<CVDisplayLinkWrapper*> (displayLinkContext);
+
+            if (self->continuousRepaint)
+                self->cachedImage.repaintEvent.signal();
+
             return kCVReturnSuccess;
         }
 
+        CachedImage& cachedImage;
+        const bool continuousRepaint;
         CVDisplayLinkRef displayLink;
     };
 

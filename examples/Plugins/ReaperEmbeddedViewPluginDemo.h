@@ -67,6 +67,7 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wshadow-field-in-constructor",
 #include <pluginterfaces/base/ftypes.h>
 #include <pluginterfaces/base/funknown.h>
 #include <pluginterfaces/vst/ivsthostapplication.h>
+#include <pluginterfaces/vst2.x/aeffect.h>
 
 JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
@@ -120,13 +121,14 @@ public:
         return listener.handledEmbeddedUIMessage (msg, parm2, parm3);
     }
 
-    Steinberg::uint32 PLUGIN_API addRef() override   { return (Steinberg::uint32) ++refCount; }
-    Steinberg::uint32 PLUGIN_API release() override  { return (Steinberg::uint32) --refCount; }
+    Steinberg::uint32 PLUGIN_API addRef() override   { return ++refCount; }
+    Steinberg::uint32 PLUGIN_API release() override  { return --refCount; }
 
     Steinberg::tresult PLUGIN_API queryInterface (const Steinberg::TUID tuid, void** obj) override
     {
         if (std::memcmp (tuid, iid, sizeof (Steinberg::TUID)) == 0)
         {
+            ++refCount;
             *obj = this;
             return Steinberg::kResultOk;
         }
@@ -137,7 +139,7 @@ public:
 
 private:
     EmbeddedViewListener& listener;
-    std::atomic<int> refCount { 1 };
+    std::atomic<Steinberg::uint32> refCount { 1 };
 };
 
 JUCE_END_IGNORE_WARNINGS_GCC_LIKE
@@ -236,11 +238,8 @@ public:
 
     int32_t queryIEditController (const Steinberg::TUID tuid, void** obj) override
     {
-        if (std::memcmp (tuid, embeddedUi.iid, sizeof (Steinberg::TUID)) == 0)
-        {
-            *obj = &embeddedUi;
+        if (embeddedUi.queryInterface (tuid, obj) == Steinberg::kResultOk)
             return Steinberg::kResultOk;
-        }
 
         *obj = nullptr;
         return Steinberg::kNoInterface;
@@ -274,11 +273,16 @@ public:
         return 0;
     }
 
-    pointer_sized_int handleVstManufacturerSpecific (int32,
+    pointer_sized_int handleVstManufacturerSpecific (int32 index,
                                                      pointer_sized_int value,
                                                      void* ptr,
                                                      float opt) override
     {
+        // The docstring at the top of reaper_plugin_fx_embed.h specifies
+        // that the index will always be effEditDraw, which is now deprecated.
+        if (index != __effEditDrawDeprecated)
+            return 0;
+
         return (pointer_sized_int) handledEmbeddedUIMessage ((int) opt,
                                                              (Steinberg::TPtrInt) value,
                                                              (Steinberg::TPtrInt) ptr);

@@ -275,7 +275,6 @@ juce::build_tools::PlistOptions parsePlistOptions (const juce::File& file,
     updateField ("ICON_FILE",                            result.iconFile);
 
     result.type = type;
-    result.versionAsHex = juce::build_tools::getVersionAsHexInteger (result.marketingVersion);
 
     if (result.storyboardName.isNotEmpty())
         result.storyboardName = result.storyboardName.fromLastOccurrenceOf ("/", false, false)
@@ -342,6 +341,7 @@ juce::build_tools::EntitlementOptions parseEntitlementsOptions (const juce::File
     updateField ("APP_SANDBOX_ENABLED",             result.isAppSandboxEnabled);
     updateField ("APP_SANDBOX_INHERIT",             result.isAppSandboxInhertianceEnabled);
     updateField ("APP_SANDBOX_OPTIONS",             result.appSandboxOptions);
+    updateField ("NETWORK_MULTICAST_ENABLED",       result.isNetworkingMulticastEnabled);
 
     result.type = type;
 

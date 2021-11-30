@@ -40,6 +40,7 @@
 
 #include "juce_audio_processors.h"
 #include <juce_gui_extra/juce_gui_extra.h>
+#include <set>
 
 //==============================================================================
 #if JUCE_MAC
@@ -149,9 +150,9 @@ private:
         {
             addIvar<NSViewComponentWithParent*> ("owner");
 
-            addMethod (@selector (isFlipped),      isFlipped,     "c@:");
-            addMethod (@selector (isOpaque),       isOpaque,      "c@:");
-            addMethod (@selector (didAddSubview:), didAddSubview, "v@:@");
+            addMethod (@selector (isFlipped),      isFlipped);
+            addMethod (@selector (isOpaque),       isOpaque);
+            addMethod (@selector (didAddSubview:), didAddSubview);
 
             registerClass();
         }

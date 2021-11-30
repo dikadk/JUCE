@@ -63,14 +63,14 @@ public:
 
     ~AccessibilityNativeImpl()
     {
+        ComSmartPtr<IRawElementProviderSimple> provider;
+        accessibilityElement->QueryInterface (IID_PPV_ARGS (provider.resetAndGetPointerAddress()));
+
         accessibilityElement->invalidateElement();
         --providerCount;
 
         if (auto* uiaWrapper = WindowsUIAWrapper::getInstanceWithoutCreating())
         {
-            ComSmartPtr<IRawElementProviderSimple> provider;
-            accessibilityElement->QueryInterface (IID_PPV_ARGS (provider.resetAndGetPointerAddress()));
-
             uiaWrapper->disconnectProvider (provider);
 
             if (providerCount == 0)
@@ -94,7 +94,7 @@ AccessibilityNativeHandle* AccessibilityHandler::getNativeImplementation() const
     return nativeImpl->accessibilityElement;
 }
 
-bool areAnyAccessibilityClientsActive()
+static bool areAnyAccessibilityClientsActive()
 {
     const auto areClientsListening = []
     {
@@ -134,7 +134,7 @@ void sendAccessibilityAutomationEvent (const AccessibilityHandler& handler, EVEN
 {
     jassert (event != EVENTID{});
 
-    getProviderWithCheckedWrapper (handler,  [event] (WindowsUIAWrapper* uiaWrapper, ComSmartPtr<IRawElementProviderSimple>& provider)
+    getProviderWithCheckedWrapper (handler, [event] (WindowsUIAWrapper* uiaWrapper, ComSmartPtr<IRawElementProviderSimple>& provider)
     {
         uiaWrapper->raiseAutomationEvent (provider, event);
     });
@@ -164,6 +164,14 @@ void notifyAccessibilityEventInternal (const AccessibilityHandler& handler, Inte
         return;
     }
 
+    if (eventType == InternalAccessibilityEvent::windowOpened
+        || eventType == InternalAccessibilityEvent::windowClosed)
+    {
+        if (auto* peer = handler.getComponent().getPeer())
+            if ((peer->getStyleFlags() & ComponentPeer::windowHasTitleBar) == 0)
+                return;
+    }
+
     auto event = [eventType]() -> EVENTID
     {
         switch (eventType)
@@ -191,9 +199,23 @@ void AccessibilityHandler::notifyAccessibilityEvent (AccessibilityEvent eventTyp
         VariantHelpers::setString (getTitle(), &newValue);
 
         sendAccessibilityPropertyChangedEvent (*this, UIA_NamePropertyId, newValue);
+        return;
     }
 
-    auto event = [eventType] () -> EVENTID
+    if (eventType == AccessibilityEvent::valueChanged)
+    {
+        if (auto* valueInterface = getValueInterface())
+        {
+            VARIANT newValue;
+            VariantHelpers::setString (valueInterface->getCurrentValueAsString(), &newValue);
+
+            sendAccessibilityPropertyChangedEvent (*this, UIA_ValueValuePropertyId, newValue);
+        }
+
+        return;
+    }
+
+    auto event = [eventType]() -> EVENTID
     {
         switch (eventType)
         {
@@ -218,8 +240,7 @@ struct SpVoiceWrapper  : public DeletedAtShutdown
     {
         auto hr = voice.CoCreateInstance (CLSID_SpVoice);
 
-        jassert (SUCCEEDED (hr));
-        ignoreUnused (hr);
+        jassertquiet (SUCCEEDED (hr));
     }
 
     ~SpVoiceWrapper() override
@@ -258,16 +279,6 @@ void AccessibilityHandler::postAnnouncement (const String& announcementString, A
         sharedVoice->voice->SetPriority (voicePriority);
         sharedVoice->voice->Speak (announcementString.toWideCharPointer(), SPF_ASYNC, nullptr);
     }
-}
-
-AccessibilityHandler::AccessibilityNativeImpl* AccessibilityHandler::createNativeImpl (AccessibilityHandler& handler)
-{
-    return new AccessibilityHandler::AccessibilityNativeImpl (handler);
-}
-
-void AccessibilityHandler::DestroyNativeImpl::operator() (AccessibilityHandler::AccessibilityNativeImpl* impl) const noexcept
-{
-    delete impl;
 }
 
 //==============================================================================

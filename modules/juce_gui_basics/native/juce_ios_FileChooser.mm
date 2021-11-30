@@ -26,7 +26,7 @@
 namespace juce
 {
 
-#if ! (defined (__IPHONE_16_0) && __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_16_0)
+#if ! (defined (__IPHONE_16_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_16_0)
  JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
  #define JUCE_DEPRECATION_IGNORED 1
 #endif
@@ -315,6 +315,7 @@ private:
         {
             addIvar<Native*> ("owner");
 
+
             if (@available(iOS 11, *))
             {
                 addMethod (@selector (documentPicker:didPickDocumentsAtURLs:), didPickDocumentsAtURLs, "v@:@@");
@@ -359,7 +360,7 @@ private:
         FileChooserControllerClass()  : ObjCClass<UIDocumentPickerViewController> ("FileChooserController_")
         {
             addIvar<Native*> ("owner");
-            addMethod (@selector (viewDidDisappear:), viewDidDisappear, "v@:@c");
+            addMethod (@selector (viewDidDisappear:), viewDidDisappear);
 
             registerClass();
         }
@@ -409,7 +410,5 @@ std::shared_ptr<FileChooser::Pimpl> FileChooser::showPlatformDialog (FileChooser
 #if JUCE_DEPRECATION_IGNORED
  JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 #endif
-
-#undef JUCE_DEPRECATION_IGNORED
 
 } // namespace juce

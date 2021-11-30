@@ -39,9 +39,9 @@ class BlurOverlayWithComponent  : public Component,
 {
 public:
     BlurOverlayWithComponent (MainWindow& window, std::unique_ptr<Component> comp)
-       : ComponentMovementWatcher (&window),
-         mainWindow (window),
-         componentToShow (std::move (comp))
+        : ComponentMovementWatcher (&window),
+          mainWindow (window),
+          componentToShow (std::move (comp))
     {
         kernel.createGaussianBlur (1.25f);
 
@@ -247,9 +247,10 @@ void MainWindow::closeCurrentProject (OpenDocumentManager::SaveIfNeeded askUserT
         pcc->hideEditor();
     }
 
-    SafePointer<MainWindow> parent { this };
     ProjucerApplication::getApp().openDocumentManager
-        .closeAllDocumentsUsingProjectAsync (*currentProject, askUserToSave, [parent, askUserToSave, callback] (bool closedSuccessfully)
+        .closeAllDocumentsUsingProjectAsync (*currentProject,
+                                             askUserToSave,
+                                             [parent = SafePointer<MainWindow> { this }, askUserToSave, callback] (bool closedSuccessfully)
     {
         if (parent == nullptr)
             return;
@@ -291,19 +292,24 @@ void MainWindow::closeCurrentProject (OpenDocumentManager::SaveIfNeeded askUserT
 
 void MainWindow::moveProject (File newProjectFileToOpen, OpenInIDE openInIDE)
 {
-    SafePointer<MainWindow> parent { this };
-    closeCurrentProject (OpenDocumentManager::SaveIfNeeded::no, [parent, newProjectFileToOpen, openInIDE] (bool)
+    closeCurrentProject (OpenDocumentManager::SaveIfNeeded::no,
+                         [parent = SafePointer<MainWindow> { this }, newProjectFileToOpen, openInIDE] (bool)
     {
         if (parent == nullptr)
             return;
 
         parent->openFile (newProjectFileToOpen, [parent, openInIDE] (bool openedSuccessfully)
         {
-            if (parent == nullptr)
+            if (! (openedSuccessfully && parent != nullptr && parent->currentProject != nullptr && openInIDE == OpenInIDE::yes))
                 return;
 
-            if (openedSuccessfully && parent->currentProject != nullptr && openInIDE == OpenInIDE::yes)
-                ProjucerApplication::getApp().getCommandManager().invokeDirectly (CommandIDs::openInIDE, false);
+            // The project component knows how to process the saveAndOpenInIDE command, but the
+            // main application does not. In order to process the command successfully, we need
+            // to ensure that the project content component has focus.
+            auto& manager = ProjucerApplication::getApp().getCommandManager();
+            manager.setFirstCommandTarget (parent->getProjectContentComponent());
+            ProjucerApplication::getApp().getCommandManager().invokeDirectly (CommandIDs::saveAndOpenInIDE, false);
+            manager.setFirstCommandTarget (nullptr);
         });
     });
 }
@@ -324,6 +330,11 @@ void MainWindow::setProject (std::unique_ptr<Project> newProject)
         createProjectContentCompIfNeeded();
         getProjectContentComponent()->setProject (currentProject.get());
     }
+
+    if (currentProject != nullptr)
+        currentProject->addChangeListener (this);
+
+    changeListenerCallback (currentProject.get());
 
     projectNameValue.referTo (currentProject != nullptr ? currentProject->getProjectValue (Ids::name) : Value());
     initialiseProjectWindow();
@@ -360,9 +371,10 @@ void MainWindow::openFile (const File& file, std::function<void (bool)> callback
 
         if (result.wasOk())
         {
-            SafePointer<MainWindow> parent { this };
-            auto sharedDoc = std::make_shared<std::unique_ptr<Project>> (std::move (newDoc));
-            closeCurrentProject (OpenDocumentManager::SaveIfNeeded::yes, [parent, sharedDoc, callback] (bool saveResult)
+            closeCurrentProject (OpenDocumentManager::SaveIfNeeded::yes,
+                                 [parent = SafePointer<MainWindow> { this },
+                                  sharedDoc = std::make_shared<std::unique_ptr<Project>> (std::move (newDoc)),
+                                  callback] (bool saveResult)
             {
                 if (parent == nullptr)
                     return;
@@ -450,7 +462,7 @@ void MainWindow::openPIP (const File& pipFile, std::function<void (bool)> callba
 
     if (generatorResult != Result::ok())
     {
-        AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
+        AlertWindow::showMessageBoxAsync (MessageBoxIconType::WarningIcon,
                                           "PIP Error.",
                                           generatorResult.getErrorMessage());
 
@@ -462,7 +474,7 @@ void MainWindow::openPIP (const File& pipFile, std::function<void (bool)> callba
 
     if (! generator->createMainCpp())
     {
-        AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
+        AlertWindow::showMessageBoxAsync (MessageBoxIconType::WarningIcon,
                                           "PIP Error.",
                                           "Failed to create Main.cpp.");
 
@@ -472,15 +484,14 @@ void MainWindow::openPIP (const File& pipFile, std::function<void (bool)> callba
         return;
     }
 
-    SafePointer<MainWindow> parent { this };
-    openFile (generator->getJucerFile(), [parent, generator, callback] (bool openedSuccessfully)
+    openFile (generator->getJucerFile(), [parent = SafePointer<MainWindow> { this }, generator, callback] (bool openedSuccessfully)
     {
         if (parent == nullptr)
             return;
 
         if (! openedSuccessfully)
         {
-            AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
+            AlertWindow::showMessageBoxAsync (MessageBoxIconType::WarningIcon,
                                               "PIP Error.",
                                               "Failed to open .jucer file.");
 
@@ -706,6 +717,16 @@ void MainWindow::valueChanged (Value& value)
                                            : "Projucer");
 }
 
+void MainWindow::changeListenerCallback (ChangeBroadcaster* source)
+{
+    auto* project = getProject();
+
+    if (source == project)
+        if (auto* peer = getPeer())
+            peer->setHasChangedSinceSaved (project != nullptr ? project->hasChangedSinceSaved()
+                                                              : false);
+}
+
 //==============================================================================
 MainWindowList::MainWindowList()
 {
@@ -768,18 +789,18 @@ void MainWindowList::closeWindow (MainWindow* w)
     else
    #endif
     {
-        WeakReference<MainWindowList> parent { this };
-        w->closeCurrentProject (OpenDocumentManager::SaveIfNeeded::yes, [parent, w] (bool closedSuccessfully)
-        {
-            if (parent == nullptr)
-                return;
+        w->closeCurrentProject (OpenDocumentManager::SaveIfNeeded::yes,
+                                [parent = WeakReference<MainWindowList> { this }, w] (bool closedSuccessfully)
+                                {
+                                    if (parent == nullptr)
+                                        return;
 
-            if (closedSuccessfully)
-            {
-                parent->windows.removeObject (w);
-                parent->saveCurrentlyOpenProjectList();
-            }
-        });
+                                    if (closedSuccessfully)
+                                    {
+                                        parent->windows.removeObject (w);
+                                        parent->saveCurrentlyOpenProjectList();
+                                    }
+                                });
     }
 }
 

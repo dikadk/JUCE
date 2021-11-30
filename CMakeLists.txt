@@ -23,7 +23,7 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(JUCE VERSION 6.0.8 LANGUAGES C CXX)
+project(JUCE VERSION 6.1.2 LANGUAGES C CXX)
 
 include(CMakeDependentOption)
 
@@ -50,7 +50,7 @@ include(extras/Build/CMake/JUCEModuleSupport.cmake)
 
 cmake_dependent_option(JUCE_ENABLE_MODULE_SOURCE_GROUPS
     "Show all module sources in IDE projects" OFF
-    "JUCE_MODULES_ONLY" OFF)
+    "NOT JUCE_MODULES_ONLY" OFF)
 
 add_subdirectory(modules)
 
@@ -143,6 +143,7 @@ install(FILES "${JUCE_BINARY_DIR}/JUCEConfigVersion.cmake"
               "${JUCE_BINARY_DIR}/JUCEConfig.cmake"
               "${JUCE_CMAKE_UTILS_DIR}/JUCEHelperTargets.cmake"
               "${JUCE_CMAKE_UTILS_DIR}/JUCECheckAtomic.cmake"
+              "${JUCE_CMAKE_UTILS_DIR}/JUCEModuleSupport.cmake"
               "${JUCE_CMAKE_UTILS_DIR}/JUCEUtils.cmake"
               "${JUCE_CMAKE_UTILS_DIR}/LaunchScreen.storyboard"
               "${JUCE_CMAKE_UTILS_DIR}/PIPAudioProcessor.cpp.in"

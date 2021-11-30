@@ -2,9 +2,7 @@
 
 ## System Requirements
 
-- Console and GUI projects require CMake 3.12 or higher.
-- Plugin projects require CMake 3.15 or higher.
-- All iOS targets require CMake 3.14 or higher (3.15 or higher for plugins targeting iOS).
+- All project types require CMake 3.15 or higher.
 - Android targets are not currently supported.
 - WebView2 on Windows via JUCE_USE_WIN_WEBVIEW2 flag in juce_gui_extra is not currently supported.
 
@@ -215,6 +213,10 @@ that the call to `juce_add_module` which adds a specific module happens *before*
 The modules will be placed in a group named "JUCE Modules" within the group for each target,
 alongside the "Source Files" and "Header Files" groups.
 
+Note: Source groups will only work when all JUCE-dependent targets are created using the
+`juce_add_*` functions. The standard `add_executable` and `add_library` commands are likely to
+result in broken builds when source groups are enabled!
+
 #### `JUCE_COPY_PLUGIN_AFTER_BUILD`
 
 Controls whether plugin targets should be installed to the system after building. Note that the
@@ -401,6 +403,9 @@ attributes directly to these creation functions, rather than adding them later.
 
 - `PUSH_NOTIFICATIONS_ENABLED`
   - Sets app entitlements to allow push notifications. False by default.
+
+- `NETWORK_MULTICAST_ENABLED`
+  - Sets app entitlements to allow IP multicast or broadcast on macOS/iOS. False by default.
 
 - `HARDENED_RUNTIME_ENABLED`
   - Enables macOS' hardened runtime for this target. Required for notarisation. False by default.

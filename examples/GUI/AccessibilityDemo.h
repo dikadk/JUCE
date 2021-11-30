@@ -32,7 +32,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics
- exporters:        xcode_mac, vs2019
+ exporters:        xcode_mac, vs2019, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -174,10 +174,10 @@ public:
         grid.templateRows = { Grid::TrackInfo (Grid::Fr (1)), Grid::TrackInfo (Grid::Fr (1)), Grid::TrackInfo (Grid::Fr (2)) };
         grid.templateColumns = { Grid::TrackInfo (Grid::Fr (1)), Grid::TrackInfo (Grid::Fr (1)) };
 
-        grid.items = { GridItem (descriptionLabel).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }),
+        grid.items = { GridItem (descriptionLabel).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }),
                        GridItem (buttons).withMargin ({ 2 }),
                        GridItem (sliders).withMargin ({ 2 }),
-                       GridItem (treeView).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }) };
+                       GridItem (treeView).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }) };
 
         grid.performLayout (getLocalBounds());
     }
@@ -193,7 +193,7 @@ private:
             addAndMakeVisible (textButton);
 
             shapeButton.setShape (getJUCELogoPath(), false, true, false);
-            shapeButton.onClick = [] { AlertWindow::showMessageBoxAsync (AlertWindow::InfoIcon, "Alert", "This is an AlertWindow"); };
+            shapeButton.onClick = [] { AlertWindow::showMessageBoxAsync (MessageBoxIconType::InfoIcon, "Alert", "This is an AlertWindow"); };
             addAndMakeVisible (shapeButton);
         }
 
@@ -241,8 +241,8 @@ private:
 
         //==============================================================================
         RadioButtonsGroupComponent radioButtons;
-        TextButton textButton { "TextButton" };
-        ShapeButton shapeButton { "ShapeButton",
+        TextButton textButton { "Press me!" };
+        ShapeButton shapeButton { "Pressable JUCE Logo",
                                   Colours::darkorange,
                                   Colours::darkorange.brighter (0.5f),
                                   Colours::darkorange.brighter (0.75f) };
@@ -288,7 +288,7 @@ private:
                                      Grid::TrackInfo (Grid::Fr (1)),
                                      Grid::TrackInfo (Grid::Fr (1)) };
 
-            grid.items = { GridItem (horizontalSlider).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }),
+            grid.items = { GridItem (horizontalSlider).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }),
                            GridItem (incDecSlider).withMargin ({ 2 }) };
 
             for (auto& rotary : rotarySliders)
@@ -386,8 +386,8 @@ private:
 
     //==============================================================================
     Label descriptionLabel { {}, "This is a demo of a few of the accessible built-in JUCE widgets.\n\n"
-                                 "To navigate this demo with a screen reader, either enable VoiceOver on macOS "
-                                 "or Narrator on Windows and follow the navigational prompts." };
+                                 "To navigate this demo with a screen reader, either enable VoiceOver on macOS and iOS, "
+                                 "TalkBack on Android, or Narrator on Windows and follow the navigational prompts." };
 
     ButtonsComponent buttonsComponent;
     SlidersComponent slidersComponent;
@@ -464,8 +464,8 @@ public:
 
         grid.templateColumns = { Grid::TrackInfo (Grid::Fr (1)), Grid::TrackInfo (Grid::Fr (1)) };
 
-        grid.items = { GridItem (descriptionLabel).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }),
-                       GridItem (infoComponent).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }),
+        grid.items = { GridItem (descriptionLabel).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }),
+                       GridItem (infoComponent).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }),
                        GridItem (actionsComponent).withMargin ({ 2 }),
                        GridItem (valueInterfaceComponent).withMargin ({ 2 }),
                        GridItem (stateComponent).withMargin ({ 2 }),
@@ -581,16 +581,16 @@ private:
                                      Grid::TrackInfo (Grid::Fr (1)) };
 
             grid.items = { GridItem (titleLabel).withMargin ({ 2 }),
-                           GridItem (titleEditor).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }),
+                           GridItem (titleEditor).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }),
 
                            GridItem (roleLabel).withMargin ({ 2 }),
-                           GridItem (roleBox).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }),
+                           GridItem (roleBox).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }),
 
                            GridItem (descriptionLabel).withMargin ({ 2 }),
-                           GridItem (descriptionEditor).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }),
+                           GridItem (descriptionEditor).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }),
 
                            GridItem (helpLabel).withMargin ({ 2 }),
-                           GridItem (helpEditor).withMargin ({ 2 }).withColumn ({ GridItem::Span (2) }) };
+                           GridItem (helpEditor).withMargin ({ 2 }).withColumn ({ GridItem::Span (2), {} }) };
 
             grid.performLayout (getLocalBounds());
         }
@@ -802,7 +802,7 @@ private:
             }();
 
             grid.items = { GridItem (valueTypeBox).withMargin (2), GridItem (readOnlyToggle).withMargin (2),
-                           GridItem (valueEditComponent).withMargin (2).withColumn ({ GridItem::Span (2) }), };
+                           GridItem (valueEditComponent).withMargin (2).withColumn ({ GridItem::Span (2), {} }), };
 
             grid.performLayout (getLocalBounds());
         }
@@ -906,7 +906,7 @@ private:
 
                 grid.items = { GridItem (minLabel).withMargin (2),       GridItem (maxLabel).withMargin (2),       GridItem (intervalLabel).withMargin (2),
                                GridItem (minValueEditor).withMargin (2), GridItem (maxValueEditor).withMargin (2), GridItem (intervalValueEditor).withMargin (2),
-                               GridItem (valueSlider).withMargin (2).withColumn ({ GridItem::Span (3) }) };
+                               GridItem (valueSlider).withMargin (2).withColumn ({ GridItem::Span (3), {} }) };
 
                 grid.performLayout (getLocalBounds());
             }
@@ -1279,11 +1279,11 @@ private:
                                          Grid::TrackInfo (Grid::Fr (1)),
                                          Grid::TrackInfo (Grid::Fr (1)) };
 
-                grid.items = { GridItem (titleLabel).withMargin (2).withColumn ({ GridItem::Span (4) }),
-                               GridItem (focusableToggle).withMargin (2).withColumn ({ GridItem::Span (2) }),
-                               GridItem (defaultToggle).withMargin (2).withColumn ({ GridItem::Span (2) }),
+                grid.items = { GridItem (titleLabel).withMargin (2).withColumn ({ GridItem::Span (4), {} }),
+                               GridItem (focusableToggle).withMargin (2).withColumn ({ GridItem::Span (2), {} }),
+                               GridItem (defaultToggle).withMargin (2).withColumn ({ GridItem::Span (2), {} }),
                                GridItem (orderLabel).withMargin (2),
-                               GridItem (orderBox).withMargin (2).withColumn ({ GridItem::Span (3) }) };
+                               GridItem (orderBox).withMargin (2).withColumn ({ GridItem::Span (3), {} }) };
 
                 grid.performLayout (getLocalBounds());
             }
@@ -1403,7 +1403,7 @@ public:
         grid.templateColumns = { Grid::TrackInfo (Grid::Fr (3)),
                                  Grid::TrackInfo (Grid::Fr (2)) };
 
-        grid.items = { GridItem (descriptionLabel).withMargin (2).withColumn ({ GridItem::Span (2) }),
+        grid.items = { GridItem (descriptionLabel).withMargin (2).withColumn ({ GridItem::Span (2), {} }),
                        GridItem (textEntryBox).withMargin (2).withArea ({ 2 }, { 1 }, { 5 }, { 2 }),
                        GridItem (priorityComboBox).withMargin (2).withArea ({ 5 }, { 1 }, { 6 }, { 2 }),
                        GridItem (announceButton).withMargin (2).withArea ({ 4 }, { 2 }, { 5 }, { 3 }) };
