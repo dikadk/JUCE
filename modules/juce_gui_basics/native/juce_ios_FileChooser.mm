@@ -292,6 +292,8 @@ private:
             }
 
             owner.finished (std::move (result));
+            }
+            
         }];
     }
 
@@ -338,12 +340,6 @@ private:
         {
             if (auto* picker = getOwner (self))
                 picker->didPickDocumentsAtURLs (@[url]);
-        }
-
-        static void didPickDocumentsAtURLs (id self, SEL, UIDocumentPickerViewController*, NSArray<NSURL*>* urls)
-        {
-            if (auto* picker = getOwner (self))
-                picker->didPickDocumentsAtURLs (urls);
         }
 
         static void documentPickerWasCancelled (id self, SEL, UIDocumentPickerViewController*)
