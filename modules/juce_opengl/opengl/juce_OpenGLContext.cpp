@@ -117,8 +117,12 @@ public:
     {
         if (nativeContext != nullptr)
         {
+           #if JUCE_MAC
+            cvDisplayLinkWrapper = std::make_unique<CVDisplayLinkWrapper> (*this);
+            cvDisplayLinkWrapper->updateActiveDisplay();
+           #endif
+
             renderThread = std::make_unique<ThreadPool> (1);
-            renderThread->setThreadPriorities (9);
             resume();
         }
     }
@@ -143,6 +147,10 @@ public:
             renderThread.reset();
         }
 
+       #if JUCE_MAC
+        cvDisplayLinkWrapper = nullptr;
+       #endif
+
         hasInitialised = false;
     }
 
@@ -161,13 +169,6 @@ public:
 
     void resume()
     {
-       #if JUCE_MAC
-        initialDisplayTopLeft = Desktop::getInstance().getDisplays()
-                                                      .getDisplayForRect (component.getTopLevelComponent()->getScreenBounds())
-                                                      ->totalArea
-                                                      .getTopLeft();
-       #endif
-
         if (renderThread != nullptr)
             renderThread->addJob (this, false);
     }
@@ -314,23 +315,29 @@ public:
 
         if (auto* peer = component.getPeer())
         {
-            auto localBounds = component.getLocalBounds();
-            const auto currentDisplay = Desktop::getInstance().getDisplays().getDisplayForRect (component.getTopLevelComponent()->getScreenBounds());
-
-            if (currentDisplay != lastDisplay)
+           #if JUCE_MAC
+            const auto displayScale = [this]
             {
-               #if JUCE_MAC
-                if (cvDisplayLinkWrapper != nullptr)
+                if (auto* wrapper = cvDisplayLinkWrapper.get())
+                    if (wrapper->updateActiveDisplay())
+                        nativeContext->setNominalVideoRefreshPeriodS (wrapper->getNominalVideoRefreshPeriodS());
+
+                if (auto* view = getCurrentView())
                 {
-                    cvDisplayLinkWrapper->updateActiveDisplay (currentDisplay->totalArea.getTopLeft());
-                    nativeContext->setNominalVideoRefreshPeriodS (cvDisplayLinkWrapper->getNominalVideoRefreshPeriodS());
+                    if ([view respondsToSelector: @selector (backingScaleFactor)])
+                        return [(id) view backingScaleFactor];
+
+                    if (auto* window = [view window])
+                        return [window backingScaleFactor];
                 }
-               #endif
-                lastDisplay = currentDisplay;
-            }
 
-            const auto displayScale = currentDisplay->scale;
+                return scale;
+            }();
+           #else
+            const auto displayScale = Desktop::getInstance().getDisplays().getDisplayForRect (component.getTopLevelComponent()->getScreenBounds())->scale;
+           #endif
 
+            auto localBounds = component.getLocalBounds();
             auto newArea = peer->getComponent().getLocalArea (&component, localBounds).withZeroOrigin() * displayScale;
 
            #if JUCE_WINDOWS && JUCE_WIN_PER_MONITOR_DPI_AWARE
@@ -589,8 +596,7 @@ public:
             context.renderer->newOpenGLContextCreated();
 
        #if JUCE_MAC
-        cvDisplayLinkWrapper = std::make_unique<CVDisplayLinkWrapper> (*this);
-        cvDisplayLinkWrapper->updateActiveDisplay (initialDisplayTopLeft);
+        jassert (cvDisplayLinkWrapper != nullptr);
         nativeContext->setNominalVideoRefreshPeriodS (cvDisplayLinkWrapper->getNominalVideoRefreshPeriodS());
        #endif
 
@@ -599,10 +605,6 @@ public:
 
     void shutdownOnThread()
     {
-       #if JUCE_MAC
-        cvDisplayLinkWrapper = nullptr;
-       #endif
-
         if (context.renderer != nullptr)
             context.renderer->openGLContextClosing();
 
@@ -709,13 +711,9 @@ public:
     OpenGLFrameBuffer cachedImageFrameBuffer;
     RectangleList<int> validArea;
     Rectangle<int> viewportArea, lastScreenBounds;
-    const Displays::Display* lastDisplay = nullptr;
     double scale = 1.0;
     AffineTransform transform;
     GLuint vertexArrayObject = 0;
-   #if JUCE_MAC
-    Point<int> initialDisplayTopLeft;
-   #endif
 
     StringArray associatedObjectNames;
     ReferenceCountedArray<ReferenceCountedObject> associatedObjects;
@@ -731,6 +729,25 @@ public:
     uint32 lastMMLockReleaseTime = 0;
 
    #if JUCE_MAC
+    NSView* getCurrentView() const
+    {
+        if (auto* peer = component.getPeer())
+            return static_cast<NSView*> (peer->getNativeHandle());
+
+        return nullptr;
+    }
+
+    NSScreen* getCurrentScreen() const
+    {
+        JUCE_ASSERT_MESSAGE_THREAD;
+
+        if (auto* view = getCurrentView())
+            if (auto* window = [view window])
+                return [window screen];
+
+        return nullptr;
+    }
+
     struct CVDisplayLinkWrapper
     {
         explicit CVDisplayLinkWrapper (CachedImage& cachedImageIn)
@@ -752,15 +769,20 @@ public:
             return 0.0;
         }
 
-        void updateActiveDisplay (Point<int> topLeftOfDisplay)
+        /*  Returns true if updated, or false otherwise. */
+        bool updateActiveDisplay()
         {
-            CGDirectDisplayID displayID;
-            uint32_t numDisplays = 0;
-            constexpr uint32_t maxNumDisplays = 1;
-            CGGetDisplaysWithPoint (convertToCGPoint (topLeftOfDisplay), maxNumDisplays, &displayID, &numDisplays);
+            auto* oldScreen = std::exchange (currentScreen, cachedImage.getCurrentScreen());
 
-            if (numDisplays == 1)
-                CVDisplayLinkSetCurrentCGDisplay (displayLink, displayID);
+            if (oldScreen == currentScreen)
+                return false;
+
+            for (NSScreen* screen in [NSScreen screens])
+                if (screen == currentScreen)
+                    if (NSNumber* number = [[screen deviceDescription] objectForKey: @"NSScreenNumber"])
+                        CVDisplayLinkSetCurrentCGDisplay (displayLink, [number unsignedIntValue]);
+
+            return true;
         }
 
         ~CVDisplayLinkWrapper()
@@ -783,6 +805,7 @@ public:
         CachedImage& cachedImage;
         const bool continuousRepaint;
         CVDisplayLinkRef displayLink;
+        NSScreen* currentScreen = nullptr;
     };
 
     std::unique_ptr<CVDisplayLinkWrapper> cvDisplayLinkWrapper;

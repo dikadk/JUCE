@@ -36,7 +36,7 @@ struct StatusItemContainer   : public Timer
 {
     //==============================================================================
     StatusItemContainer (SystemTrayIconComponent& iconComp, const Image& im)
-        : owner (iconComp), statusIcon (imageToNSImage (im))
+        : owner (iconComp), statusIcon (imageToNSImage (ScaledImage (im)))
     {
     }
 
@@ -51,7 +51,7 @@ struct StatusItemContainer   : public Timer
 
     void updateIcon (const Image& newImage)
     {
-        statusIcon.reset (imageToNSImage (newImage));
+        statusIcon.reset (imageToNSImage (ScaledImage (newImage)));
         setIconSize();
         configureIcon();
     }
@@ -110,6 +110,11 @@ struct ButtonBasedStatusItem   : public StatusItemContainer
        #else
         [button sendActionOn: NSLeftMouseDownMask | NSRightMouseDownMask | NSScrollWheelMask];
        #endif
+    }
+
+    ~ButtonBasedStatusItem() override
+    {
+        [statusItem.get() button].image = nullptr;
     }
 
     void configureIcon() override
