@@ -199,10 +199,10 @@ namespace juce
                 addIvar<ContentSharer::ContentSharerNativeImpl *>("nativeSharer");
 
                 JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wundeclared-selector")
-                addMethod(@selector(initWithContentSharerNativeImpl:), initWithContentSharerNativeImpl, "@@:^v");
+                addMethod(@selector (initWithContentSharerNativeImpl:), initWithContentSharerNativeImpl);
                 JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
-                addMethod(@selector(popoverPresentationController:willRepositionPopoverToRect:inView:), willRepositionPopover, "v@:@@@");
+                addMethod(@selector (popoverPresentationController:willRepositionPopoverToRect:inView:), willRepositionPopover);
                 registerClass();
             }
 
