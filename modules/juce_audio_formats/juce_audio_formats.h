@@ -23,7 +23,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -35,7 +34,7 @@
 
   ID:                 juce_audio_formats
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE audio file format codecs
   description:        Classes for reading and writing various audio file formats.
   website:            http://www.juce.com/juce
@@ -50,7 +49,6 @@
 
 *******************************************************************************/
 
-
 #pragma once
 #define JUCE_AUDIO_FORMATS_H_INCLUDED
 
@@ -63,7 +61,7 @@
     reduce the size of your codebase and build time.
 */
 #ifndef JUCE_USE_FLAC
- #define JUCE_USE_FLAC 1
+#define JUCE_USE_FLAC 1
 #endif
 
 /** Config: JUCE_USE_OGGVORBIS
@@ -72,7 +70,7 @@
     reduce the size of your codebase and build time.
 */
 #ifndef JUCE_USE_OGGVORBIS
- #define JUCE_USE_OGGVORBIS 1
+#define JUCE_USE_OGGVORBIS 1
 #endif
 
 /** Config: JUCE_USE_MP3AUDIOFORMAT
@@ -88,26 +86,26 @@
     of using this code, then do not enable this setting.
 */
 #ifndef JUCE_USE_MP3AUDIOFORMAT
- #define JUCE_USE_MP3AUDIOFORMAT 0
+#define JUCE_USE_MP3AUDIOFORMAT 0
 #endif
 
 /** Config: JUCE_USE_LAME_AUDIO_FORMAT
     Enables the LameEncoderAudioFormat class.
 */
 #ifndef JUCE_USE_LAME_AUDIO_FORMAT
- #define JUCE_USE_LAME_AUDIO_FORMAT 0
+#define JUCE_USE_LAME_AUDIO_FORMAT 0
 #endif
 
 /** Config: JUCE_USE_WINDOWS_MEDIA_FORMAT
     Enables the Windows Media SDK codecs.
 */
 #ifndef JUCE_USE_WINDOWS_MEDIA_FORMAT
- #define JUCE_USE_WINDOWS_MEDIA_FORMAT 1
+#define JUCE_USE_WINDOWS_MEDIA_FORMAT 1
 #endif
 
-#if ! JUCE_WINDOWS || JUCE_MINGW
- #undef JUCE_USE_WINDOWS_MEDIA_FORMAT
- #define JUCE_USE_WINDOWS_MEDIA_FORMAT 0
+#if !JUCE_WINDOWS || JUCE_MINGW
+#undef JUCE_USE_WINDOWS_MEDIA_FORMAT
+#define JUCE_USE_WINDOWS_MEDIA_FORMAT 0
 #endif
 
 //==============================================================================

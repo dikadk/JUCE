@@ -23,7 +23,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -35,7 +34,7 @@
 
   ID:                 juce_audio_processors
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE audio processor classes
   description:        Classes for loading and playing VST, AU, LADSPA, or internally-generated audio processors.
   website:            http://www.juce.com/juce
@@ -50,7 +49,6 @@
 
 *******************************************************************************/
 
-
 #pragma once
 #define JUCE_AUDIO_PROCESSORS_H_INCLUDED
 
@@ -64,7 +62,7 @@
     @see VSTPluginFormat, VST3PluginFormat, AudioPluginFormat, AudioPluginFormatManager, JUCE_PLUGINHOST_AU, JUCE_PLUGINHOST_VST3, JUCE_PLUGINHOST_LADSPA
 */
 #ifndef JUCE_PLUGINHOST_VST
- #define JUCE_PLUGINHOST_VST 0
+#define JUCE_PLUGINHOST_VST 0
 #endif
 
 /** Config: JUCE_PLUGINHOST_VST3
@@ -73,7 +71,7 @@
     @see VSTPluginFormat, VST3PluginFormat, AudioPluginFormat, AudioPluginFormatManager, JUCE_PLUGINHOST_VST, JUCE_PLUGINHOST_AU, JUCE_PLUGINHOST_LADSPA
 */
 #ifndef JUCE_PLUGINHOST_VST3
- #define JUCE_PLUGINHOST_VST3 0
+#define JUCE_PLUGINHOST_VST3 0
 #endif
 
 /** Config: JUCE_PLUGINHOST_AU
@@ -82,7 +80,7 @@
     @see AudioUnitPluginFormat, AudioPluginFormat, AudioPluginFormatManager, JUCE_PLUGINHOST_VST, JUCE_PLUGINHOST_VST3, JUCE_PLUGINHOST_LADSPA
 */
 #ifndef JUCE_PLUGINHOST_AU
- #define JUCE_PLUGINHOST_AU 0
+#define JUCE_PLUGINHOST_AU 0
 #endif
 
 /** Config: JUCE_PLUGINHOST_LADSPA
@@ -91,7 +89,7 @@
     @see LADSPAPluginFormat, AudioPluginFormat, AudioPluginFormatManager, JUCE_PLUGINHOST_VST, JUCE_PLUGINHOST_VST3, JUCE_PLUGINHOST_AU
  */
 #ifndef JUCE_PLUGINHOST_LADSPA
- #define JUCE_PLUGINHOST_LADSPA 0
+#define JUCE_PLUGINHOST_LADSPA 0
 #endif
 
 /** Config: JUCE_CUSTOM_VST3_SDK
@@ -100,19 +98,19 @@
     need to enable this and should just use the version of the SDK included with JUCE.
 */
 #ifndef JUCE_CUSTOM_VST3_SDK
- #define JUCE_CUSTOM_VST3_SDK 0
+#define JUCE_CUSTOM_VST3_SDK 0
 #endif
 
-#if ! (JUCE_PLUGINHOST_AU || JUCE_PLUGINHOST_VST || JUCE_PLUGINHOST_VST3 || JUCE_PLUGINHOST_LADSPA)
+#if !(JUCE_PLUGINHOST_AU || JUCE_PLUGINHOST_VST || JUCE_PLUGINHOST_VST3 || JUCE_PLUGINHOST_LADSPA)
 // #error "You need to set either the JUCE_PLUGINHOST_AU and/or JUCE_PLUGINHOST_VST and/or JUCE_PLUGINHOST_VST3 and/or JUCE_PLUGINHOST_LADSPA flags if you're using this module!"
 #endif
 
-#if ! (defined (JUCE_SUPPORT_CARBON) || JUCE_64BIT || JUCE_IOS)
- #define JUCE_SUPPORT_CARBON 1
+#if !(defined(JUCE_SUPPORT_CARBON) || JUCE_64BIT || JUCE_IOS)
+#define JUCE_SUPPORT_CARBON 1
 #endif
 
 #ifndef JUCE_SUPPORT_LEGACY_AUDIOPROCESSOR
- #define JUCE_SUPPORT_LEGACY_AUDIOPROCESSOR 1
+#define JUCE_SUPPORT_LEGACY_AUDIOPROCESSOR 1
 #endif
 
 //==============================================================================

@@ -23,7 +23,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -35,7 +34,7 @@
 
   ID:                 juce_graphics
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE graphics classes
   description:        Classes for 2D vector graphics, image loading/saving, font handling, etc.
   website:            http://www.juce.com/juce
@@ -51,7 +50,6 @@
 
 *******************************************************************************/
 
-
 #pragma once
 #define JUCE_GRAPHICS_H_INCLUDED
 
@@ -66,7 +64,7 @@
     you'd rather use libpng, libjpeg, etc.
 */
 #ifndef JUCE_USE_COREIMAGE_LOADER
- #define JUCE_USE_COREIMAGE_LOADER 1
+#define JUCE_USE_COREIMAGE_LOADER 1
 #endif
 
 /** Config: JUCE_USE_DIRECTWRITE
@@ -75,7 +73,7 @@
     management and layout.
 */
 #ifndef JUCE_USE_DIRECTWRITE
- #define JUCE_USE_DIRECTWRITE 1
+#define JUCE_USE_DIRECTWRITE 1
 #endif
 
 /** Config: JUCE_DISABLE_COREGRAPHICS_FONT_SMOOTHING
@@ -84,31 +82,31 @@
     find makes the text too 'fat' for their taste.
 */
 #ifndef JUCE_DISABLE_COREGRAPHICS_FONT_SMOOTHING
- #define JUCE_DISABLE_COREGRAPHICS_FONT_SMOOTHING 0
+#define JUCE_DISABLE_COREGRAPHICS_FONT_SMOOTHING 0
 #endif
 
 #ifndef JUCE_INCLUDE_PNGLIB_CODE
- #define JUCE_INCLUDE_PNGLIB_CODE 1
+#define JUCE_INCLUDE_PNGLIB_CODE 1
 #endif
 
 #ifndef JUCE_INCLUDE_JPEGLIB_CODE
- #define JUCE_INCLUDE_JPEGLIB_CODE 1
+#define JUCE_INCLUDE_JPEGLIB_CODE 1
 #endif
 
 #ifndef USE_COREGRAPHICS_RENDERING
- #define USE_COREGRAPHICS_RENDERING 1
+#define USE_COREGRAPHICS_RENDERING 1
 #endif
 
 //==============================================================================
 namespace juce
 {
-    class Image;
-    class AffineTransform;
-    class Path;
-    class Font;
-    class Graphics;
-    class FillType;
-    class LowLevelGraphicsContext;
+  class Image;
+  class AffineTransform;
+  class Path;
+  class Font;
+  class Graphics;
+  class FillType;
+  class LowLevelGraphicsContext;
 }
 
 #include "geometry/juce_AffineTransform.h"
@@ -150,8 +148,8 @@ namespace juce
 #include "effects/juce_GlowEffect.h"
 
 #if JUCE_GRAPHICS_INCLUDE_COREGRAPHICS_HELPERS && (JUCE_MAC || JUCE_IOS)
- #include "native/juce_mac_CoreGraphicsHelpers.h"
- #include "native/juce_mac_CoreGraphicsContext.h"
+#include "native/juce_mac_CoreGraphicsHelpers.h"
+#include "native/juce_mac_CoreGraphicsContext.h"
 #endif
 
 #if JUCE_DIRECT2D && JUCE_WINDOWS

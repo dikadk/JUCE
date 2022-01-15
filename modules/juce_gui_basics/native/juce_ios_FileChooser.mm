@@ -87,7 +87,7 @@ public:
         {
             controller.reset ([controllerClassInstance initWithDocumentTypes: utTypeArray
                                                                       inMode: UIDocumentPickerModeOpen]);
-        if (@available (iOS 11.0, *))
+            if (@available (iOS 11.0, *))
                 [controller.get() setAllowsMultipleSelection: (flags & FileBrowserComponent::canSelectMultipleItems) != 0];
         }
 
@@ -131,6 +131,16 @@ public:
     ~Native() override
     {
         exitModalState (0);
+
+        // Our old peer may not have received a becomeFirstResponder call at this point,
+        // so the static currentlyFocusedPeer may be null.
+        // We'll try to find an appropriate peer to focus.
+
+        for (auto i = 0; i < ComponentPeer::getNumPeers(); ++i)
+            if (auto* p = ComponentPeer::getPeer (i))
+                if (p != getPeer())
+                    if (auto* view = (UIView*) p->getNativeHandle())
+                        [view becomeFirstResponder];
     }
 
     void launch() override
@@ -239,9 +249,9 @@ private:
 
         for (NSURL* url in urls)
         {
-            auto* fileAccessIntent = isWriting 
-                                ? [NSFileAccessIntent writingIntentWithURL: url options: accessOptions]
-                                : [NSFileAccessIntent readingIntentWithURL: url options: accessOptions];
+            auto* fileAccessIntent = isWriting
+                                   ? [NSFileAccessIntent writingIntentWithURL: url options: accessOptions]
+                                   : [NSFileAccessIntent readingIntentWithURL: url options: accessOptions];
             [intents addObject: fileAccessIntent];
         }
 
@@ -265,7 +275,7 @@ private:
 
                     NSError* error = nil;
 
-                    auto* bookmark = [url bookmarkDataWithOptions: 0
+                auto* bookmark = [url bookmarkDataWithOptions: 0
                                includingResourceValuesForKeys: nil
                                                 relativeToURL: nil
                                                         error: &error];
@@ -288,12 +298,9 @@ private:
                     }
 
                     result.add (std::move (juceUrl));
-
             }
 
             owner.finished (std::move (result));
-            }
-            
         }];
     }
 
@@ -305,9 +312,8 @@ private:
     void pickerWasCancelled()
     {
         cancelPendingUpdate();
-
         owner.finished ({});
-        exitModalState (0);
+        // Calling owner.finished will delete this Pimpl instance, so don't call any more member functions here!
     }
 
     //==============================================================================
@@ -340,6 +346,12 @@ private:
         {
             if (auto* picker = getOwner (self))
                 picker->didPickDocumentsAtURLs (@[url]);
+        }
+
+        static void didPickDocumentsAtURLs (id self, SEL, UIDocumentPickerViewController*, NSArray<NSURL*>* urls)
+        {
+            if (auto* picker = getOwner (self))
+                picker->didPickDocumentsAtURLs (urls);
         }
 
         static void documentPickerWasCancelled (id self, SEL, UIDocumentPickerViewController*)

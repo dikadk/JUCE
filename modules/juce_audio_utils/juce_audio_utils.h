@@ -23,7 +23,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -35,7 +34,7 @@
 
   ID:                 juce_audio_utils
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE extra audio utility classes
   description:        Classes for audio-related GUI and miscellaneous tasks.
   website:            http://www.juce.com/juce
@@ -49,7 +48,6 @@
  END_JUCE_MODULE_DECLARATION
 
 *******************************************************************************/
-
 
 #pragma once
 #define JUCE_AUDIO_UTILS_H_INCLUDED

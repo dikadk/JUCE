@@ -23,7 +23,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -35,7 +34,7 @@
 
   ID:                 juce_gui_basics
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE GUI core classes
   description:        Basic user-interface components and related classes.
   website:            http://www.juce.com/juce
@@ -50,7 +49,6 @@
 
 *******************************************************************************/
 
-
 #pragma once
 #define JUCE_GUI_BASICS_H_INCLUDED
 
@@ -64,7 +62,7 @@
     components are being drawn.
 */
 #ifndef JUCE_ENABLE_REPAINT_DEBUGGING
- #define JUCE_ENABLE_REPAINT_DEBUGGING 0
+#define JUCE_ENABLE_REPAINT_DEBUGGING 0
 #endif
 
 /** Config: JUCE_USE_XRANDR
@@ -74,7 +72,7 @@
     the availability of Xrandr is queried during runtime.
 */
 #ifndef JUCE_USE_XRANDR
- #define JUCE_USE_XRANDR 1
+#define JUCE_USE_XRANDR 1
 #endif
 
 /** Config: JUCE_USE_XINERAMA
@@ -85,7 +83,7 @@
     the availability of Xinerama is queried during runtime.
 */
 #ifndef JUCE_USE_XINERAMA
- #define JUCE_USE_XINERAMA 1
+#define JUCE_USE_XINERAMA 1
 #endif
 
 /** Config: JUCE_USE_XSHM
@@ -93,14 +91,14 @@
     unless you have a good reason to disable it.
 */
 #ifndef JUCE_USE_XSHM
- #define JUCE_USE_XSHM 1
+#define JUCE_USE_XSHM 1
 #endif
 
 /** Config: JUCE_USE_XRENDER
     Enables XRender to allow semi-transparent windowing on Linux.
 */
 #ifndef JUCE_USE_XRENDER
- #define JUCE_USE_XRENDER 0
+#define JUCE_USE_XRENDER 0
 #endif
 
 /** Config: JUCE_USE_XCURSOR
@@ -108,14 +106,14 @@
     a good reason to disable it.
 */
 #ifndef JUCE_USE_XCURSOR
- #define JUCE_USE_XCURSOR 1
+#define JUCE_USE_XCURSOR 1
 #endif
 
 /** Config: JUCE_WIN_PER_MONITOR_DPI_AWARE
     Enables per-monitor DPI awareness on Windows 8.1 and above.
 */
 #ifndef JUCE_WIN_PER_MONITOR_DPI_AWARE
- #define JUCE_WIN_PER_MONITOR_DPI_AWARE 1
+#define JUCE_WIN_PER_MONITOR_DPI_AWARE 1
 #endif
 
 /** Config: JUCE_ENABLE_IOS_REPAINT_CACHE
@@ -127,64 +125,64 @@
  however slow things down, if your drawing code is simple.
  */
 #ifndef JUCE_ENABLE_IOS_REPAINT_CACHE
- #define JUCE_ENABLE_IOS_REPAINT_CACHE 0
+#define JUCE_ENABLE_IOS_REPAINT_CACHE 0
 #endif
 
 /** Config: JUCE_CLIP_OBSCURED_REGIONS_FOR_UNCLIPPED_PAINTING
  * This options will call ComponentHelpers::clipObscuredRegions() even for components with
  * setPaintingIsUnclipped(true) if they have child components. May speed up drawing in some cases.
-*/
+ */
 #ifndef JUCE_CLIP_OBSCURED_REGIONS_FOR_UNCLIPPED_PAINTING
- #define JUCE_CLIP_OBSCURED_REGIONS_FOR_UNCLIPPED_PAINTING 0
+#define JUCE_CLIP_OBSCURED_REGIONS_FOR_UNCLIPPED_PAINTING 0
 #endif
 
 //==============================================================================
 namespace juce
 {
-    class Component;
-    class LookAndFeel;
-    class MouseInputSource;
-    class MouseInputSourceInternal;
-    class ComponentPeer;
-    class MouseEvent;
-    struct MouseWheelDetails;
-    struct PenDetails;
-    class ToggleButton;
-    class TextButton;
-    class AlertWindow;
-    class TextLayout;
-    class ScrollBar;
-    class ComboBox;
-    class Button;
-    class FilenameComponent;
-    class ResizableWindow;
-    class MenuBarComponent;
-    class GlyphArrangement;
-    class TableHeaderComponent;
-    class Toolbar;
-    class PopupMenu;
-    class ProgressBar;
-    class FileBrowserComponent;
-    class DirectoryContentsDisplayComponent;
-    class FilePreviewComponent;
-    class CallOutBox;
-    class Drawable;
-    class DrawablePath;
-    class DrawableComposite;
-    class CaretComponent;
-    class KeyPressMappingSet;
-    class ApplicationCommandManagerListener;
-    class DrawableButton;
-    class Displays;
-    class AccessibilityHandler;
-    class KeyboardFocusTraverser;
+  class Component;
+  class LookAndFeel;
+  class MouseInputSource;
+  class MouseInputSourceInternal;
+  class ComponentPeer;
+  class MouseEvent;
+  struct MouseWheelDetails;
+  struct PenDetails;
+  class ToggleButton;
+  class TextButton;
+  class AlertWindow;
+  class TextLayout;
+  class ScrollBar;
+  class ComboBox;
+  class Button;
+  class FilenameComponent;
+  class ResizableWindow;
+  class MenuBarComponent;
+  class GlyphArrangement;
+  class TableHeaderComponent;
+  class Toolbar;
+  class PopupMenu;
+  class ProgressBar;
+  class FileBrowserComponent;
+  class DirectoryContentsDisplayComponent;
+  class FilePreviewComponent;
+  class CallOutBox;
+  class Drawable;
+  class DrawablePath;
+  class DrawableComposite;
+  class CaretComponent;
+  class KeyPressMappingSet;
+  class ApplicationCommandManagerListener;
+  class DrawableButton;
+  class Displays;
+  class AccessibilityHandler;
+  class KeyboardFocusTraverser;
 
-    class FlexBox;
-    class Grid;
+  class FlexBox;
+  class Grid;
 
-   #if JUCE_MAC || JUCE_WINDOWS || JUCE_LINUX
-    Image createSnapshotOfNativeWindow (void* nativeWindowHandle);
-   #endif
+#if JUCE_MAC || JUCE_WINDOWS || JUCE_LINUX
+  Image createSnapshotOfNativeWindow(void *nativeWindowHandle);
+#endif
 }
 
 #include "mouse/juce_MouseCursor.h"
@@ -334,55 +332,55 @@ namespace juce
 #include "accessibility/juce_AccessibilityHandler.h"
 
 #if JUCE_LINUX || JUCE_BSD
- #if JUCE_GUI_BASICS_INCLUDE_XHEADERS
-  // If you're missing these headers, you need to install the libx11-dev package
-  #include <X11/Xlib.h>
-  #include <X11/Xatom.h>
-  #include <X11/Xresource.h>
-  #include <X11/Xutil.h>
-  #include <X11/Xmd.h>
-  #include <X11/keysym.h>
-  #include <X11/XKBlib.h>
-  #include <X11/cursorfont.h>
-  #include <unistd.h>
+#if JUCE_GUI_BASICS_INCLUDE_XHEADERS
+// If you're missing these headers, you need to install the libx11-dev package
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xresource.h>
+#include <X11/Xutil.h>
+#include <X11/Xmd.h>
+#include <X11/keysym.h>
+#include <X11/XKBlib.h>
+#include <X11/cursorfont.h>
+#include <unistd.h>
 
-  #if JUCE_USE_XRANDR
-   // If you're missing this header, you need to install the libxrandr-dev package
-   #include <X11/extensions/Xrandr.h>
-  #endif
+#if JUCE_USE_XRANDR
+// If you're missing this header, you need to install the libxrandr-dev package
+#include <X11/extensions/Xrandr.h>
+#endif
 
-  #if JUCE_USE_XINERAMA
-   // If you're missing this header, you need to install the libxinerama-dev package
-   #include <X11/extensions/Xinerama.h>
-  #endif
+#if JUCE_USE_XINERAMA
+// If you're missing this header, you need to install the libxinerama-dev package
+#include <X11/extensions/Xinerama.h>
+#endif
 
-  #if JUCE_USE_XSHM
-   #include <X11/extensions/XShm.h>
-   #include <sys/shm.h>
-   #include <sys/ipc.h>
-  #endif
+#if JUCE_USE_XSHM
+#include <X11/extensions/XShm.h>
+#include <sys/shm.h>
+#include <sys/ipc.h>
+#endif
 
-  #if JUCE_USE_XRENDER
-   // If you're missing these headers, you need to install the libxrender-dev and libxcomposite-dev packages
-   #include <X11/extensions/Xrender.h>
-   #include <X11/extensions/Xcomposite.h>
-  #endif
+#if JUCE_USE_XRENDER
+// If you're missing these headers, you need to install the libxrender-dev and libxcomposite-dev packages
+#include <X11/extensions/Xrender.h>
+#include <X11/extensions/Xcomposite.h>
+#endif
 
-  #if JUCE_USE_XCURSOR
-   // If you're missing this header, you need to install the libxcursor-dev package
-   #include <X11/Xcursor/Xcursor.h>
-  #endif
+#if JUCE_USE_XCURSOR
+// If you're missing this header, you need to install the libxcursor-dev package
+#include <X11/Xcursor/Xcursor.h>
+#endif
 
-  #undef SIZEOF
-  #undef KeyPress
+#undef SIZEOF
+#undef KeyPress
 
-  #include "native/x11/juce_linux_XWindowSystem.h"
-  #include "native/x11/juce_linux_X11_Symbols.h"
- #endif
+#include "native/x11/juce_linux_XWindowSystem.h"
+#include "native/x11/juce_linux_X11_Symbols.h"
+#endif
 #endif
 
 #if JUCE_GUI_BASICS_INCLUDE_SCOPED_THREAD_DPI_AWARENESS_SETTER && JUCE_WINDOWS
- #include "native/juce_win32_ScopedThreadDPIAwarenessSetter.h"
+#include "native/juce_win32_ScopedThreadDPIAwarenessSetter.h"
 #endif
 
 #include "layout/juce_FlexItem.h"

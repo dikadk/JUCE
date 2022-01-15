@@ -23,7 +23,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -35,7 +34,7 @@
 
   ID:                 juce_osc
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE OSC classes
   description:        Open Sound Control implementation.
   website:            http://www.juce.com/juce
@@ -47,7 +46,6 @@
  END_JUCE_MODULE_DECLARATION
 
 *******************************************************************************/
-
 
 #pragma once
 #define JUCE_OSC_H_INCLUDED

@@ -23,7 +23,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -35,7 +34,7 @@
 
   ID:                 juce_audio_plugin_client
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE audio plugin wrapper classes
   description:        Classes for building VST, VST3, AudioUnit, AAX and RTAS plugins.
   website:            http://www.juce.com/juce
@@ -47,7 +46,6 @@
  END_JUCE_MODULE_DECLARATION
 
 *******************************************************************************/
-
 
 #pragma once
 
@@ -63,7 +61,7 @@
     previous versions.
 */
 #ifndef JUCE_VST3_CAN_REPLACE_VST2
- #define JUCE_VST3_CAN_REPLACE_VST2 1
+#define JUCE_VST3_CAN_REPLACE_VST2 1
 #endif
 
 /** Config: JUCE_FORCE_USE_LEGACY_PARAM_IDS
@@ -74,7 +72,7 @@
     automation data and enabling this may mess up user's DAW projects.
 */
 #ifndef JUCE_FORCE_USE_LEGACY_PARAM_IDS
- #define JUCE_FORCE_USE_LEGACY_PARAM_IDS 0
+#define JUCE_FORCE_USE_LEGACY_PARAM_IDS 0
 #endif
 
 /** Config: JUCE_FORCE_LEGACY_PARAMETER_AUTOMATION_TYPE
@@ -87,7 +85,7 @@
     with JUCE version 5.2.0 and later.
 */
 #ifndef JUCE_FORCE_LEGACY_PARAMETER_AUTOMATION_TYPE
- #define JUCE_FORCE_LEGACY_PARAMETER_AUTOMATION_TYPE 0
+#define JUCE_FORCE_LEGACY_PARAMETER_AUTOMATION_TYPE 0
 #endif
 
 /** Config: JUCE_USE_STUDIO_ONE_COMPATIBLE_PARAMETERS
@@ -100,7 +98,7 @@
     incompatible with old automation data.
 */
 #ifndef JUCE_USE_STUDIO_ONE_COMPATIBLE_PARAMETERS
- #define JUCE_USE_STUDIO_ONE_COMPATIBLE_PARAMETERS 1
+#define JUCE_USE_STUDIO_ONE_COMPATIBLE_PARAMETERS 1
 #endif
 
 /** Config: JUCE_AU_WRAPPERS_SAVE_PROGRAM_STATES
@@ -114,7 +112,7 @@
     compatibility with previously saved state.
 */
 #ifndef JUCE_AU_WRAPPERS_SAVE_PROGRAM_STATES
- #define JUCE_AU_WRAPPERS_SAVE_PROGRAM_STATES 0
+#define JUCE_AU_WRAPPERS_SAVE_PROGRAM_STATES 0
 #endif
 
 /** Config: JUCE_STANDALONE_FILTER_WINDOW_USE_KIOSK_MODE
@@ -124,7 +122,7 @@
 */
 
 #ifndef JUCE_STANDALONE_FILTER_WINDOW_USE_KIOSK_MODE
- #define JUCE_STANDALONE_FILTER_WINDOW_USE_KIOSK_MODE (JUCE_IOS || JUCE_ANDROID)
+#define JUCE_STANDALONE_FILTER_WINDOW_USE_KIOSK_MODE (JUCE_IOS || JUCE_ANDROID)
 #endif
 
 #include "utility/juce_CreatePluginFilter.h"

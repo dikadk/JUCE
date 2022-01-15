@@ -12,7 +12,6 @@
 
 #pragma once
 
-
 #include <juce_analytics/juce_analytics.h>
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
@@ -33,28 +32,27 @@
 #include <juce_product_unlocking/juce_product_unlocking.h>
 #include <juce_video/juce_video.h>
 
-
-#if defined (JUCE_PROJUCER_VERSION) && JUCE_PROJUCER_VERSION < JUCE_VERSION
- /** If you've hit this error then the version of the Projucer that was used to generate this project is
-     older than the version of the JUCE modules being included. To fix this error, re-save your project
-     using the latest version of the Projucer or, if you aren't using the Projucer to manage your project,
-     remove the JUCE_PROJUCER_VERSION define.
- */
- #error "This project was last saved using an outdated version of the Projucer! Re-save this project with the latest version to fix this error."
+#if defined(JUCE_PROJUCER_VERSION) && JUCE_PROJUCER_VERSION < JUCE_VERSION
+/** If you've hit this error then the version of the Projucer that was used to generate this project is
+    older than the version of the JUCE modules being included. To fix this error, re-save your project
+    using the latest version of the Projucer or, if you aren't using the Projucer to manage your project,
+    remove the JUCE_PROJUCER_VERSION define.
+*/
+#error "This project was last saved using an outdated version of the Projucer! Re-save this project with the latest version to fix this error."
 #endif
 
-#if ! DONT_SET_USING_JUCE_NAMESPACE
- // If your code uses a lot of JUCE classes, then this will obviously save you
- // a lot of typing, but can be disabled by setting DONT_SET_USING_JUCE_NAMESPACE.
- using namespace juce;
+#if !DONT_SET_USING_JUCE_NAMESPACE
+// If your code uses a lot of JUCE classes, then this will obviously save you
+// a lot of typing, but can be disabled by setting DONT_SET_USING_JUCE_NAMESPACE.
+using namespace juce;
 #endif
 
-#if ! JUCE_DONT_DECLARE_PROJECTINFO
+#if !JUCE_DONT_DECLARE_PROJECTINFO
 namespace ProjectInfo
 {
-    const char* const  projectName    = "DemoRunner";
-    const char* const  companyName    = "Raw Material Software Limited";
-    const char* const  versionString  = "6.1.3";
-    const int          versionNumber  = 0x60103;
+    const char *const projectName = "DemoRunner";
+    const char *const companyName = "Raw Material Software Limited";
+    const char *const versionString = "6.1.4";
+    const int versionNumber = 0x60104;
 }
 #endif

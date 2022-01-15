@@ -20,7 +20,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -32,7 +31,7 @@
 
   ID:                 juce_audio_basics
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE audio and MIDI data classes
   description:        Classes for audio buffer manipulation, midi message handling, synthesis, etc.
   website:            http://www.juce.com/juce
@@ -47,47 +46,46 @@
 
 *******************************************************************************/
 
-
 #pragma once
 #define JUCE_AUDIO_BASICS_H_INCLUDED
 
 #include <juce_core/juce_core.h>
 
 //==============================================================================
-#undef Complex  // apparently some C libraries actually define these symbols (!)
+#undef Complex // apparently some C libraries actually define these symbols (!)
 #undef Factor
 
 //==============================================================================
-#if JUCE_MINGW && ! defined (__SSE2__)
- #define JUCE_USE_SSE_INTRINSICS 0
+#if JUCE_MINGW && !defined(__SSE2__)
+#define JUCE_USE_SSE_INTRINSICS 0
 #endif
 
 #ifndef JUCE_USE_SSE_INTRINSICS
- #define JUCE_USE_SSE_INTRINSICS 1
+#define JUCE_USE_SSE_INTRINSICS 1
 #endif
 
-#if ! JUCE_INTEL
- #undef JUCE_USE_SSE_INTRINSICS
+#if !JUCE_INTEL
+#undef JUCE_USE_SSE_INTRINSICS
 #endif
 
-#if __ARM_NEON__ && ! (JUCE_USE_VDSP_FRAMEWORK || defined (JUCE_USE_ARM_NEON))
- #define JUCE_USE_ARM_NEON 1
+#if __ARM_NEON__ && !(JUCE_USE_VDSP_FRAMEWORK || defined(JUCE_USE_ARM_NEON))
+#define JUCE_USE_ARM_NEON 1
 #endif
 
 #if TARGET_IPHONE_SIMULATOR
- #ifdef JUCE_USE_ARM_NEON
-  #undef JUCE_USE_ARM_NEON
- #endif
- #define JUCE_USE_ARM_NEON 0
+#ifdef JUCE_USE_ARM_NEON
+#undef JUCE_USE_ARM_NEON
+#endif
+#define JUCE_USE_ARM_NEON 0
 #endif
 
 /** Config: JUCE_PREFER_COMPILER_AUTOVECTORIZATION
  * This options makes juce::FloatVectorOperations and classes that use it under the hood use compiler
  * auto-vectorization instead of Apple vDSP or JUCE SIMD. As of mid 2020, at least with Clang and ARMv8,
  * they seem faster.
-*/
+ */
 #ifndef JUCE_PREFER_COMPILER_AUTOVECTORIZATION
- #define JUCE_PREFER_COMPILER_AUTOVECTORIZATION 0
+#define JUCE_PREFER_COMPILER_AUTOVECTORIZATION 0
 #endif
 
 //==============================================================================

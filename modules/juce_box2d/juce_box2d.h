@@ -23,7 +23,6 @@
   ==============================================================================
 */
 
-
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -35,7 +34,7 @@
 
   ID:                 juce_box2d
   vendor:             juce
-  version:            6.1.3
+  version:            6.1.4
   name:               JUCE wrapper for the Box2D physics engine
   description:        The Box2D physics engine and some utility classes.
   website:            http://www.juce.com/juce
@@ -48,17 +47,16 @@
 
 *******************************************************************************/
 
-
 #pragma once
 #define JUCE_BOX2D_H_INCLUDED
 
 //==============================================================================
 #include <juce_graphics/juce_graphics.h>
 
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wconversion",
-                                     "-Wshadow-field",
-                                     "-Wzero-as-null-pointer-constant",
-                                     "-Wsign-conversion")
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wconversion",
+                                    "-Wshadow-field",
+                                    "-Wzero-as-null-pointer-constant",
+                                    "-Wsign-conversion")
 
 #include <climits>
 #include <cfloat>
@@ -68,5 +66,5 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wconversion",
 JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
 #ifndef DOXYGEN // for some reason, Doxygen sees this as a re-definition of Box2DRenderer
- #include "utils/juce_Box2DRenderer.h"
+#include "utils/juce_Box2DRenderer.h"
 #endif // DOXYGEN
