@@ -269,35 +269,33 @@ private:
 
             for (NSURL* url in urls)
             {
-                for (NSURL* url in urls)
-                {
-                    [url startAccessingSecurityScopedResource];
+                [url startAccessingSecurityScopedResource];
 
-                    NSError* error = nil;
+                NSError* error = nil;
 
                 auto* bookmark = [url bookmarkDataWithOptions: 0
                                includingResourceValuesForKeys: nil
                                                 relativeToURL: nil
                                                         error: &error];
 
-                    [bookmark retain];
+                [bookmark retain];
 
-                    [url stopAccessingSecurityScopedResource];
+                [url stopAccessingSecurityScopedResource];
 
-                    URL juceUrl (nsStringToJuce ([url absoluteString]));
+                URL juceUrl (nsStringToJuce ([url absoluteString]));
 
-                    if (error == nil)
-                    {
-                        setURLBookmark (juceUrl, (void*) bookmark);
-                    }
-                    else
-                    {
-                        auto desc = [error localizedDescription];
-                        ignoreUnused (desc);
-                        jassertfalse;
-                    }
+                if (error == nil)
+                {
+                    setURLBookmark (juceUrl, (void*) bookmark);
+                }
+                else
+                {
+                    auto desc = [error localizedDescription];
+                    ignoreUnused (desc);
+                    jassertfalse;
+                }
 
-                    result.add (std::move (juceUrl));
+                result.add (std::move (juceUrl));
             }
 
             owner.finished (std::move (result));
@@ -346,12 +344,6 @@ private:
         {
             if (auto* picker = getOwner (self))
                 picker->didPickDocumentsAtURLs (@[url]);
-        }
-
-        static void didPickDocumentsAtURLs (id self, SEL, UIDocumentPickerViewController*, NSArray<NSURL*>* urls)
-        {
-            if (auto* picker = getOwner (self))
-                picker->didPickDocumentsAtURLs (urls);
         }
 
         static void documentPickerWasCancelled (id self, SEL, UIDocumentPickerViewController*)
