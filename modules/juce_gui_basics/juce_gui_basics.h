@@ -34,7 +34,7 @@
 
   ID:                 juce_gui_basics
   vendor:             juce
-  version:            6.1.4
+  version:            6.1.6
   name:               JUCE GUI core classes
   description:        Basic user-interface components and related classes.
   website:            http://www.juce.com/juce
@@ -139,49 +139,51 @@
 //==============================================================================
 namespace juce
 {
-  class Component;
-  class LookAndFeel;
-  class MouseInputSource;
-  class MouseInputSourceInternal;
-  class ComponentPeer;
-  class MouseEvent;
-  struct MouseWheelDetails;
-  struct PenDetails;
-  class ToggleButton;
-  class TextButton;
-  class AlertWindow;
-  class TextLayout;
-  class ScrollBar;
-  class ComboBox;
-  class Button;
-  class FilenameComponent;
-  class ResizableWindow;
-  class MenuBarComponent;
-  class GlyphArrangement;
-  class TableHeaderComponent;
-  class Toolbar;
-  class PopupMenu;
-  class ProgressBar;
-  class FileBrowserComponent;
-  class DirectoryContentsDisplayComponent;
-  class FilePreviewComponent;
-  class CallOutBox;
-  class Drawable;
-  class DrawablePath;
-  class DrawableComposite;
-  class CaretComponent;
-  class KeyPressMappingSet;
-  class ApplicationCommandManagerListener;
-  class DrawableButton;
-  class Displays;
-  class AccessibilityHandler;
-  class KeyboardFocusTraverser;
+    class Component;
+    class LookAndFeel;
+    class MouseInputSource;
+    class MouseInputSourceInternal;
+    class ComponentPeer;
+    class MouseEvent;
+    struct MouseWheelDetails;
+    struct PenDetails;
+    class ToggleButton;
+    class TextButton;
+    class AlertWindow;
+    class TextLayout;
+    class ScrollBar;
+    class ComboBox;
+    class Button;
+    class FilenameComponent;
+    class ResizableWindow;
+    class MenuBarComponent;
+    class GlyphArrangement;
+    class TableHeaderComponent;
+    class Toolbar;
+    class PopupMenu;
+    class ProgressBar;
+    class FileBrowserComponent;
+    class DirectoryContentsDisplayComponent;
+    class FilePreviewComponent;
+    class CallOutBox;
+    class Drawable;
+    class DrawablePath;
+    class DrawableComposite;
+    class CaretComponent;
+    class KeyPressMappingSet;
+    class ApplicationCommandManagerListener;
+    class DrawableButton;
+    class Displays;
+    class AccessibilityHandler;
+    class KeyboardFocusTraverser;
+    class PointerState;
 
-  class FlexBox;
-  class Grid;
+    class FlexBox;
+    class Grid;
+    class FocusOutline;
 
 #if JUCE_MAC || JUCE_WINDOWS || JUCE_LINUX
-  Image createSnapshotOfNativeWindow(void *nativeWindowHandle);
+    Image createSnapshotOfNativeWindow(void *nativeWindowHandle);
 #endif
 }
 
@@ -277,6 +279,7 @@ namespace juce
 #include "menus/juce_BurgerMenuComponent.h"
 #include "buttons/juce_ToolbarButton.h"
 #include "misc/juce_DropShadower.h"
+#include "misc/juce_FocusOutline.h"
 #include "misc/juce_JUCESplashScreen.h"
 #include "widgets/juce_TreeView.h"
 #include "windows/juce_TopLevelWindow.h"

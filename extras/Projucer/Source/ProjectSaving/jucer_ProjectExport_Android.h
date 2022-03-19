@@ -115,7 +115,7 @@ public:
           androidGradleSettingsContent(settings, Ids::androidGradleSettingsContent, getUndoManager()),
           androidVersionCode(settings, Ids::androidVersionCode, getUndoManager(), "1"),
           androidMinimumSDK(settings, Ids::androidMinimumSDK, getUndoManager(), "16"),
-          androidTargetSDK(settings, Ids::androidTargetSDK, getUndoManager(), "29"),
+          androidTargetSDK(settings, Ids::androidTargetSDK, getUndoManager(), "30"),
           androidTheme(settings, Ids::androidTheme, getUndoManager()),
           androidExtraAssetsFolder(settings, Ids::androidExtraAssetsFolder, getUndoManager()),
           androidOboeRepositoryPath(settings, Ids::androidOboeRepositoryPath, getUndoManager()),
@@ -1628,7 +1628,7 @@ private:
         setAttributeIfNotPresent(*manifest, "xmlns:android", "http://schemas.android.com/apk/res/android");
         setAttributeIfNotPresent(*manifest, "android:versionCode", androidVersionCode.get());
         setAttributeIfNotPresent(*manifest, "android:versionName", project.getVersionString());
-        setAttributeIfNotPresent(*manifest, "package", project.getBundleIdentifierString());
+        setAttributeIfNotPresent(*manifest, "package", project.getBundleIdentifierString().toLowerCase());
 
         return manifest;
     }

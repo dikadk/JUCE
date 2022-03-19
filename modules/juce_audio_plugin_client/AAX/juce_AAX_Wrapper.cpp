@@ -1533,7 +1533,7 @@ namespace AAXClasses
                     }
                 }
 
-                if (bypass)
+                if (bypass && pluginInstance->getBypassParameter() == nullptr)
                     pluginInstance->processBlockBypassed (buffer, midiBuffer);
                 else
                     pluginInstance->processBlock (buffer, midiBuffer);
@@ -1601,7 +1601,7 @@ namespace AAXClasses
 
             if (bypassParameter == nullptr)
             {
-                ownedBypassParameter.reset (new AudioParameterBool (cDefaultMasterBypassID, "Master Bypass", false, {}, {}, {}));
+                ownedBypassParameter.reset (new AudioParameterBool (cDefaultMasterBypassID, "Master Bypass", false));
                 bypassParameter = ownedBypassParameter.get();
             }
 

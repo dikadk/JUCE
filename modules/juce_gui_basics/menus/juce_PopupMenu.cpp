@@ -187,29 +187,6 @@ struct ItemComponent  : public Component
     PopupMenu::Item item;
 
 private:
-    class ValueInterface  : public AccessibilityValueInterface
-    {
-    public:
-        ValueInterface() = default;
-
-        bool isReadOnly() const override  { return true; }
-
-        double getCurrentValue() const override
-        {
-            return 1.0;
-        }
-
-        String getCurrentValueAsString() const override
-        {
-            return TRANS ("Checked");
-        }
-
-        void setValue (double) override {}
-        void setValueAsString (const String&) override  {}
-
-        AccessibleValueRange getRange() const override { return {}; }
-    };
-
     //==============================================================================
     class ItemAccessibilityHandler  : public AccessibilityHandler
     {
@@ -218,9 +195,7 @@ private:
             : AccessibilityHandler (itemComponentToWrap,
                                     isAccessibilityHandlerRequired (itemComponentToWrap.item) ? AccessibilityRole::menuItem
                                                                                               : AccessibilityRole::ignored,
-                                    getAccessibilityActions (*this, itemComponentToWrap),
-                                    AccessibilityHandler::Interfaces { itemComponentToWrap.item.isTicked ? std::make_unique<ValueInterface>()
-                                                                                                         : nullptr }),
+                                    getAccessibilityActions (*this, itemComponentToWrap)),
               itemComponent (itemComponentToWrap)
         {
         }
@@ -242,7 +217,7 @@ private:
             }
 
             if (itemComponent.item.isTicked)
-                state = state.withChecked();
+                state = state.withCheckable().withChecked();
 
             return state.isFocused() ? state.withSelected() : state;
         }
@@ -541,6 +516,7 @@ struct MenuWindow  : public Component
             auto resultID = options.hasWatchedComponentBeenDeleted() ? 0 : getResultItemID (item);
 
             exitModalState (resultID);
+            exitingModalState = true;
 
             if (makeInvisible && deletionChecker != nullptr)
                 setVisible (false);
@@ -738,6 +714,9 @@ struct MenuWindow  : public Component
         if (auto* currentlyModalWindow = dynamic_cast<MenuWindow*> (Component::getCurrentlyModalComponent()))
             if (! treeContains (currentlyModalWindow))
                 return false;
+
+        if (exitingModalState)
+            return false;
 
         return true;
     }
@@ -1323,6 +1302,7 @@ struct MenuWindow  : public Component
     uint32 windowCreationTime, lastFocusedTime, timeEnteredCurrentChildComp;
     OwnedArray<MouseSourceState> mouseSourceStates;
     float scaleFactor;
+    bool exitingModalState = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MenuWindow)
 };
