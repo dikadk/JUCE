@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -36,6 +36,9 @@ namespace detail
     template <typename T>
     struct EqualityComparableToNullptr<T, Void<decltype (std::declval<T>() != nullptr)>>
         : std::true_type {};
+
+    template <typename T>
+    constexpr bool shouldCheckAgainstNullptr = EqualityComparableToNullptr<T>::value;
 } // namespace detail
 #endif
 
@@ -51,15 +54,19 @@ namespace detail
 struct NullCheckedInvocation
 {
     template <typename Callable, typename... Args,
-              std::enable_if_t<detail::EqualityComparableToNullptr<Callable>::value, int> = 0>
+              std::enable_if_t<detail::shouldCheckAgainstNullptr<Callable>, int> = 0>
     static void invoke (Callable&& fn, Args&&... args)
     {
+        JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Waddress")
+
         if (fn != nullptr)
             fn (std::forward<Args> (args)...);
+
+        JUCE_END_IGNORE_WARNINGS_GCC_LIKE
     }
 
     template <typename Callable, typename... Args,
-              std::enable_if_t<! detail::EqualityComparableToNullptr<Callable>::value, int> = 0>
+              std::enable_if_t<! detail::shouldCheckAgainstNullptr<Callable>, int> = 0>
     static void invoke (Callable&& fn, Args&&... args)
     {
         fn (std::forward<Args> (args)...);

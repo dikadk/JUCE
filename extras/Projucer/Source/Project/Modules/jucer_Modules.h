@@ -1,20 +1,13 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE 7 technical preview.
+   Copyright (c) 2022 - Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
-   licensing.
+   You may use this code under the terms of the GPL v3
+   (see www.gnu.org/licenses).
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
-
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
-
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   For the technical preview this file cannot be licensed commercially.
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -36,16 +29,16 @@ class LibraryModule
 public:
     LibraryModule (const ModuleDescription&);
 
-    bool isValid() const                    { return moduleInfo.isValid(); }
-    String getID() const                    { return moduleInfo.getID(); }
-    String getVendor() const                { return moduleInfo.getVendor(); }
-    String getVersion() const               { return moduleInfo.getVersion(); }
-    String getName() const                  { return moduleInfo.getName(); }
-    String getDescription() const           { return moduleInfo.getDescription(); }
-    String getLicense() const               { return moduleInfo.getLicense(); }
-    String getMinimumCppStandard() const    { return moduleInfo.getMinimumCppStandard(); }
+    bool isValid() const                    { return moduleDescription.isValid(); }
+    String getID() const                    { return moduleDescription.getID(); }
+    String getVendor() const                { return moduleDescription.getVendor(); }
+    String getVersion() const               { return moduleDescription.getVersion(); }
+    String getName() const                  { return moduleDescription.getName(); }
+    String getDescription() const           { return moduleDescription.getDescription(); }
+    String getLicense() const               { return moduleDescription.getLicense(); }
+    String getMinimumCppStandard() const    { return moduleDescription.getMinimumCppStandard(); }
 
-    File getFolder() const                  { return moduleInfo.getFolder(); }
+    File getFolder() const                  { return moduleDescription.getFolder(); }
 
     void writeIncludes (ProjectSaver&, OutputStream&);
     void addSettingsForModuleToExporter (ProjectExporter&, ProjectSaver&) const;
@@ -68,7 +61,7 @@ public:
                                   build_tools::ProjectType::Target::Type forTarget =
                                       build_tools::ProjectType::Target::unspecified) const;
 
-    ModuleDescription moduleInfo;
+    ModuleDescription moduleDescription;
 
 private:
     void addSearchPathsToExporter (ProjectExporter&) const;

@@ -1,20 +1,13 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE 7 technical preview.
+   Copyright (c) 2022 - Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
-   licensing.
+   You may use this code under the terms of the GPL v3
+   (see www.gnu.org/licenses).
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
-
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
-
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   For the technical preview this file cannot be licensed commercially.
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -22,6 +15,13 @@
 
   ==============================================================================
 */
+
+#include "juce_mac_CGMetalLayerRenderer.h"
+
+#if TARGET_OS_SIMULATOR && JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS
+ #warning JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS uses parts of the Metal API that are currently unsupported in the simulator - falling back to JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS=0
+ #undef JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS
+#endif
 
 #if defined (__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
  #define JUCE_HAS_IOS_POINTER_SUPPORT 1
@@ -112,20 +112,37 @@ enum class MouseEventFlags
 
 using namespace juce;
 
+struct CADisplayLinkDeleter
+{
+    void operator() (CADisplayLink* displayLink) const noexcept
+    {
+        [displayLink invalidate];
+        [displayLink release];
+    }
+};
+
 @interface JuceUIView : UIView <UITextViewDelegate>
 {
 @public
     UIViewComponentPeer* owner;
     UITextView* hiddenTextView;
+<<<<<<< HEAD
 #if JUCE_ENABLE_IOS_REPAINT_CACHE
 @private
     detail::ContextPtr bitmapContext;
     RectangleList<int> dirtyRects;
 #endif /* JUCE_ENABLE_IOS_REPAINT_CACHE */
+=======
+    std::unique_ptr<CADisplayLink, CADisplayLinkDeleter> displayLink;
+>>>>>>> 68514d626c917bbd6bc9e57291624448e533802c
 }
 
 - (JuceUIView*) initWithOwner: (UIViewComponentPeer*) owner withFrame: (CGRect) frame;
 - (void) dealloc;
+
++ (Class) layerClass;
+
+- (void) displayLinkCallback: (CADisplayLink*) dl;
 
 - (void) drawRect: (CGRect) r;
 
@@ -197,8 +214,8 @@ struct UIViewPeerControllerReceiver
 };
 
 class UIViewComponentPeer  : public ComponentPeer,
-                             public FocusChangeListener,
-                             public UIViewPeerControllerReceiver
+                             private FocusChangeListener,
+                             private UIViewPeerControllerReceiver
 {
 public:
     UIViewComponentPeer (Component&, int windowStyleFlags, UIView* viewToAttachTo);
@@ -236,7 +253,10 @@ public:
     void setIcon (const Image& newIcon) override;
     StringArray getAvailableRenderingEngines() override       { return StringArray ("CoreGraphics Renderer"); }
 
+    void displayLinkCallback();
+
     void drawRect (CGRect);
+    void drawRectWithContext (CGContextRef, CGRect);
     bool canBecomeKeyWindow();
 
     //==============================================================================
@@ -312,6 +332,9 @@ private:
                 peer->repaint (rect);
         }
     };
+
+    std::unique_ptr<CoreGraphicsMetalLayerRenderer> metalRenderer;
+    RectangleList<float> deferredRepaints;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UIViewComponentPeer)
@@ -465,6 +488,11 @@ MultiTouchMapper<UITouch*> UIViewComponentPeer::currentTouches;
     [super initWithFrame: frame];
     owner = peer;
 
+    displayLink.reset ([CADisplayLink displayLinkWithTarget: self
+                                                   selector: @selector (displayLinkCallback:)]);
+    [displayLink.get() addToRunLoop: [NSRunLoop mainRunLoop]
+                            forMode: NSDefaultRunLoopMode];
+
     hiddenTextView = [[UITextView alloc] initWithFrame: CGRectZero];
     [self addSubview: hiddenTextView];
     hiddenTextView.delegate = self;
@@ -499,6 +527,8 @@ MultiTouchMapper<UITouch*> UIViewComponentPeer::currentTouches;
     [hiddenTextView removeFromSuperview];
     [hiddenTextView release];
 
+    displayLink = nullptr;
+
     [super dealloc];
 }
 
@@ -516,6 +546,23 @@ MultiTouchMapper<UITouch*> UIViewComponentPeer::currentTouches;
     [super setNeedsDisplayInRect:r];
 }
 #endif /* JUCE_ENABLE_IOS_REPAINT_CACHE */
+
+//==============================================================================
++ (Class) layerClass
+{
+   #if JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS
+    if (@available (iOS 12, *))
+        return [CAMetalLayer class];
+   #endif
+
+    return [CALayer class];
+}
+
+- (void) displayLinkCallback: (CADisplayLink*) dl
+{
+    if (owner != nullptr)
+        owner->displayLinkCallback();
+}
 
 //==============================================================================
 - (void) drawRect: (CGRect) r
@@ -731,10 +778,13 @@ UIViewComponentPeer::UIViewComponentPeer (Component& comp, int windowStyleFlags,
     view.opaque = component.isOpaque();
     view.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent: 0];
 
-   #if JUCE_COREGRAPHICS_DRAW_ASYNC
-    if (! getComponentAsyncLayerBackedViewDisabled (component))
-        [[view layer] setDrawsAsynchronously: YES];
+   #if JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS
+    if (@available (iOS 12, *))
+        metalRenderer = std::make_unique<CoreGraphicsMetalLayerRenderer> ((CAMetalLayer*) view.layer, comp);
    #endif
+
+    if ((windowStyleFlags & ComponentPeer::windowRequiresSynchronousCoreGraphicsRendering) == 0)
+        [[view layer] setDrawsAsynchronously: YES];
 
     if (isSharedWindow)
     {
@@ -1213,13 +1263,55 @@ void UIViewComponentPeer::globalFocusChanged (Component*)
 }
 
 //==============================================================================
+void UIViewComponentPeer::displayLinkCallback()
+{
+    if (deferredRepaints.isEmpty())
+        return;
+
+    auto dispatchRectangles = [this] ()
+    {
+        // We shouldn't need this preprocessor guard, but when running in the simulator
+        // CAMetalLayer is flagged as requiring iOS 13
+       #if JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS
+        if (metalRenderer != nullptr)
+        {
+            if (@available (iOS 12, *))
+            {
+                return metalRenderer->drawRectangleList ((CAMetalLayer*) view.layer,
+                                                         (float) view.contentScaleFactor,
+                                                         view.frame,
+                                                         component,
+                                                         [this] (CGContextRef ctx, CGRect r) { drawRectWithContext (ctx, r); },
+                                                         deferredRepaints);
+            }
+
+            // The creation of metalRenderer should already be guarded with @available (iOS 12, *).
+            jassertfalse;
+            return false;
+        }
+       #endif
+
+        for (const auto& r : deferredRepaints)
+            [view setNeedsDisplayInRect: convertToCGRect (r)];
+
+        return true;
+    };
+
+    if (dispatchRectangles())
+        deferredRepaints.clear();
+}
+
+//==============================================================================
 void UIViewComponentPeer::drawRect (CGRect r)
 {
     if (r.size.width < 1.0f || r.size.height < 1.0f)
         return;
 
-    CGContextRef cg = UIGraphicsGetCurrentContext();
+    drawRectWithContext (UIGraphicsGetCurrentContext(), r);
+}
 
+void UIViewComponentPeer::drawRectWithContext (CGContextRef cg, CGRect)
+{
     if (! component.isOpaque())
         CGContextClearRect (cg, CGContextGetClipBoundingBox (cg));
 
@@ -1276,9 +1368,12 @@ void Desktop::allowedOrientationsChanged()
 void UIViewComponentPeer::repaint (const Rectangle<int>& area)
 {
     if (insideDrawRect || ! MessageManager::getInstance()->isThisTheMessageThread())
+    {
         (new AsyncRepaintMessage (this, area))->post();
-    else
-        [view setNeedsDisplayInRect: convertToCGRect (area)];
+        return;
+    }
+
+    deferredRepaints.add (area.toFloat());
 }
 
 void UIViewComponentPeer::performAnyPendingRepaintsNow()

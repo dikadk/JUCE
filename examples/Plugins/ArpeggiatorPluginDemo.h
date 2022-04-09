@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -79,7 +79,7 @@ public:
 
     void processBlock (AudioBuffer<float>& buffer, MidiBuffer& midi) override
     {
-        // the audio buffer in a midi effect will have zero channels!
+        // A pure MIDI plugin shouldn't be provided any audio data
         jassert (buffer.getNumChannels() == 0);
 
         // however we use the buffer to get timing information

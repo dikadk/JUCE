@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -551,7 +551,14 @@ inline std::unique_ptr<AudioFormatReader> makeAudioFormatReader (AudioFormatMana
 class AudioFormatReaderFactory
 {
 public:
+    AudioFormatReaderFactory() = default;
+    AudioFormatReaderFactory (const AudioFormatReaderFactory&) = default;
+    AudioFormatReaderFactory (AudioFormatReaderFactory&&) = default;
+    AudioFormatReaderFactory& operator= (const AudioFormatReaderFactory&) = default;
+    AudioFormatReaderFactory& operator= (AudioFormatReaderFactory&&) = default;
+
     virtual ~AudioFormatReaderFactory() noexcept = default;
+
     virtual std::unique_ptr<AudioFormatReader> make (AudioFormatManager&) const = 0;
     virtual std::unique_ptr<AudioFormatReaderFactory> clone() const = 0;
 };
