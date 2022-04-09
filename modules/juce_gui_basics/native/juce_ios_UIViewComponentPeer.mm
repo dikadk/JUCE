@@ -126,15 +126,7 @@ struct CADisplayLinkDeleter
 @public
     UIViewComponentPeer* owner;
     UITextView* hiddenTextView;
-<<<<<<< HEAD
-#if JUCE_ENABLE_IOS_REPAINT_CACHE
-@private
-    detail::ContextPtr bitmapContext;
-    RectangleList<int> dirtyRects;
-#endif /* JUCE_ENABLE_IOS_REPAINT_CACHE */
-=======
     std::unique_ptr<CADisplayLink, CADisplayLinkDeleter> displayLink;
->>>>>>> 68514d626c917bbd6bc9e57291624448e533802c
 }
 
 - (JuceUIView*) initWithOwner: (UIViewComponentPeer*) owner withFrame: (CGRect) frame;

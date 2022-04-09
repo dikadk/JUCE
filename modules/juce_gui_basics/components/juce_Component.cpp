@@ -513,13 +513,11 @@ namespace juce
         : componentName(name),
           componentFlags(0)
     {
-<<<<<<< HEAD
-=======
-        for (auto& ms : Desktop::getInstance().getMouseSources())
+        /*for (auto& ms : Desktop::getInstance().getMouseSources())
             if (auto* c = ms.getComponentUnderMouse())
                 if (modalWouldBlockComponent (*c, &modal))
                     (c->*function) (ms, ScalingHelpers::screenPosToLocalPos (*c, ms.getScreenPosition()), Time::getCurrentTime());
->>>>>>> 68514d626c917bbd6bc9e57291624448e533802c
+         */
     }
 
     Component::~Component()
