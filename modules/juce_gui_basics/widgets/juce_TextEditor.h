@@ -1,13 +1,20 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE 7 technical preview.
+   This file is part of the JUCE library.
    Copyright (c) 2022 - Raw Material Software Limited
 
-   You may use this code under the terms of the GPL v3
-   (see www.gnu.org/licenses).
+   JUCE is an open source library subject to commercial or open-source
+   licensing.
 
-   For the technical preview this file cannot be licensed commercially.
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
+
+   End User License Agreement: www.juce.com/juce-7-licence
+   Privacy Policy: www.juce.com/juce-privacy-policy
+
+   Or: You may also use this code under the terms of the GPL v3 (see
+   www.gnu.org/licenses).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -658,7 +665,23 @@ public:
     void setInputRestrictions (int maxTextLength,
                                const String& allowedCharacters = String());
 
+    /** Sets the type of virtual keyboard that should be displayed when this editor has
+        focus.
+    */
     void setKeyboardType (VirtualKeyboardType type) noexcept    { keyboardType = type; }
+
+    /** Sets the behaviour of mouse/touch interactions outside this component.
+
+        If true, then presses outside of the TextEditor will dismiss the virtual keyboard.
+        If false, then the virtual keyboard will remain onscreen for as long as the TextEditor has
+        keyboard focus.
+    */
+    void setClicksOutsideDismissVirtualKeyboard (bool);
+
+    /** Returns true if the editor is configured to hide the virtual keyboard when the mouse is
+        pressed on another component.
+    */
+    bool getClicksOutsideDismissVirtualKeyboard() const     { return clicksOutsideDismissVirtualKeyboard; }
 
     //==============================================================================
     /** This abstract base class is implemented by LookAndFeel classes to provide
@@ -737,6 +760,7 @@ private:
     struct TextEditorViewport;
     struct InsertAction;
     struct RemoveAction;
+    class EditorAccessibilityHandler;
 
     std::unique_ptr<Viewport> viewport;
     TextHolderComponent* textHolder;
@@ -758,6 +782,8 @@ private:
     bool valueTextNeedsUpdating = false;
     bool consumeEscAndReturnKeys = true;
     bool underlineWhitespace = true;
+    bool mouseDownInEditor = false;
+    bool clicksOutsideDismissVirtualKeyboard = false;
 
     UndoManager undoManager;
     std::unique_ptr<CaretComponent> caret;

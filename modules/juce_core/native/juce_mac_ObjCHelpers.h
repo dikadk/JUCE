@@ -164,7 +164,7 @@ inline var nsDictionaryToVar (NSDictionary* dictionary)
     DynamicObject::Ptr dynamicObject (new DynamicObject());
 
     for (NSString* key in dictionary)
-        dynamicObject->setProperty (nsStringToJuce (key), nsObjectToVar (dictionary[key]));
+        dynamicObject->setProperty (nsStringToJuce (key), nsObjectToVar ([dictionary objectForKey: key]));
 
     return var (dynamicObject.get());
 }
@@ -513,7 +513,7 @@ public:
     bool operator!= (const void* ptr) const  { return ((const void*) block != ptr); }
     ~ObjCBlock() { if (block != nullptr) [block release]; }
 
-    operator BlockType() { return block; }
+    operator BlockType() const { return block; }
 
 private:
     BlockType block;

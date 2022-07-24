@@ -1,13 +1,20 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE 7 technical preview.
+   This file is part of the JUCE library.
    Copyright (c) 2022 - Raw Material Software Limited
 
-   You may use this code under the terms of the GPL v3
-   (see www.gnu.org/licenses).
+   JUCE is an open source library subject to commercial or open-source
+   licensing.
 
-   For the technical preview this file cannot be licensed commercially.
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
+
+   End User License Agreement: www.juce.com/juce-7-licence
+   Privacy Policy: www.juce.com/juce-privacy-policy
+
+   Or: You may also use this code under the terms of the GPL v3 (see
+   www.gnu.org/licenses).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -19,6 +26,7 @@
 #pragma once
 
 #include "../Plugins/IOConfigurationWindow.h"
+#include "../Plugins/ARAPlugin.h"
 
 inline String getFormatSuffix (const AudioProcessor* plugin)
 {
@@ -148,6 +156,7 @@ public:
         programs,
         audioIO,
         debug,
+        araHost,
         numTypes
     };
 
@@ -234,6 +243,16 @@ private:
             type = PluginWindow::Type::generic;
         }
 
+        if (type == PluginWindow::Type::araHost)
+        {
+           #if JUCE_PLUGINHOST_ARA && (JUCE_MAC || JUCE_WINDOWS)
+            if (auto* araPluginInstanceWrapper = dynamic_cast<ARAPluginInstanceWrapper*> (&processor))
+                if (auto* ui = araPluginInstanceWrapper->createARAHostEditor())
+                    return ui;
+           #endif
+            return {};
+        }
+
         if (type == PluginWindow::Type::generic)  return new GenericAudioProcessorEditor (processor);
         if (type == PluginWindow::Type::programs) return new ProgramAudioProcessorEditor (processor);
         if (type == PluginWindow::Type::audioIO)  return new IOConfigurationWindow (processor);
@@ -252,6 +271,7 @@ private:
             case Type::programs:   return "Programs";
             case Type::audioIO:    return "IO";
             case Type::debug:      return "Debug";
+            case Type::araHost:    return "ARAHost";
             case Type::numTypes:
             default:               return {};
         }

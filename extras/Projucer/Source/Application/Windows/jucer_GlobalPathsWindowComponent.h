@@ -1,13 +1,20 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE 7 technical preview.
+   This file is part of the JUCE library.
    Copyright (c) 2022 - Raw Material Software Limited
 
-   You may use this code under the terms of the GPL v3
-   (see www.gnu.org/licenses).
+   JUCE is an open source library subject to commercial or open-source
+   licensing.
 
-   For the technical preview this file cannot be licensed commercially.
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
+
+   End User License Agreement: www.juce.com/juce-7-licence
+   Privacy Policy: www.juce.com/juce-privacy-policy
+
+   Or: You may also use this code under the terms of the GPL v3 (see
+   www.gnu.org/licenses).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -218,13 +225,13 @@ private:
                      "If you are building a legacy VST plug-in then this path should point to a VST2 SDK. "
                      "The VST2 SDK can be obtained from the vstsdk3610_11_06_2018_build_37 (or older) VST3 SDK or JUCE version 5.3.2. "
                      "You also need a VST2 license from Steinberg to distribute VST2 plug-ins.");
+        builder.add (new FilePathPropertyComponent (araPathValue, "ARA SDK", true, isThisOS),
+                     "If you are building ARA enabled plug-ins, this should be the path to the ARA SDK folder.");
 
         if (getSelectedOS() != TargetOS::linux)
         {
             builder.add (new FilePathPropertyComponent (aaxPathValue, "AAX SDK", true, isThisOS),
                          "If you are building AAX plug-ins, this should be the path to the AAX SDK folder.");
-            builder.add (new FilePathPropertyComponent (rtasPathValue, "RTAS SDK (deprecated)", true, isThisOS),
-                         "If you are building RTAS plug-ins, this should be the path to the RTAS SDK folder.");
         }
 
         builder.add (new FilePathPropertyComponent (androidSDKPathValue, "Android SDK", true, isThisOS),
@@ -242,8 +249,6 @@ private:
             String exeLabel ("startup script");
            #endif
 
-            builder.add (new FilePathPropertyComponent (clionExePathValue, "CLion " + exeLabel,          false, isThisOS),
-                         "This path will be used for the \"Save Project and Open in IDE...\" option of the CLion exporter.");
             builder.add (new FilePathPropertyComponent (androidStudioExePathValue, "Android Studio " + exeLabel, false, isThisOS),
                          "This path will be used for the \"Save Project and Open in IDE...\" option of the Android Studio exporter.");
         }
@@ -264,10 +269,9 @@ private:
         juceModulePathValue       = settings.getStoredPath (Ids::defaultJuceModulePath, os);
         userModulePathValue       = settings.getStoredPath (Ids::defaultUserModulePath, os);
         vstPathValue              = settings.getStoredPath (Ids::vstLegacyPath, os);
-        rtasPathValue             = settings.getStoredPath (Ids::rtasPath, os);
         aaxPathValue              = settings.getStoredPath (Ids::aaxPath, os);
+        araPathValue              = settings.getStoredPath (Ids::araPath, os);
         androidSDKPathValue       = settings.getStoredPath (Ids::androidSDKPath, os);
-        clionExePathValue         = settings.getStoredPath (Ids::clionExePath, os);
         androidStudioExePathValue = settings.getStoredPath (Ids::androidStudioExePath, os);
     }
 
@@ -277,10 +281,9 @@ private:
         juceModulePathValue      .resetToDefault();
         userModulePathValue      .resetToDefault();
         vstPathValue             .resetToDefault();
-        rtasPathValue            .resetToDefault();
         aaxPathValue             .resetToDefault();
+        araPathValue             .resetToDefault();
         androidSDKPathValue      .resetToDefault();
-        clionExePathValue        .resetToDefault();
         androidStudioExePathValue.resetToDefault();
 
         repaint();
@@ -290,8 +293,8 @@ private:
     Value selectedOSValue;
 
     ValueTreePropertyWithDefault jucePathValue, juceModulePathValue, userModulePathValue,
-                                 vstPathValue, rtasPathValue, aaxPathValue, androidSDKPathValue,
-                                 clionExePathValue, androidStudioExePathValue;
+                                 vstPathValue, aaxPathValue, araPathValue, androidSDKPathValue,
+                                 androidStudioExePathValue;
 
     Viewport propertyViewport;
     PropertyGroupComponent propertyGroup  { "Global Paths", { getIcons().openFolder, Colours::transparentBlack } };

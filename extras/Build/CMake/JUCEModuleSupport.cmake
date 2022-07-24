@@ -1,12 +1,19 @@
 # ==============================================================================
 #
-#  This file is part of the JUCE 7 technical preview.
+#  This file is part of the JUCE library.
 #  Copyright (c) 2022 - Raw Material Software Limited
 #
-#  You may use this code under the terms of the GPL v3
-#  (see www.gnu.org/licenses).
+#  JUCE is an open source library subject to commercial or open-source
+#  licensing.
 #
-#  For the technical preview this file cannot be licensed commercially.
+#  By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+#  Agreement and JUCE Privacy Policy.
+#
+#  End User License Agreement: www.juce.com/juce-7-licence
+#  Privacy Policy: www.juce.com/juce-privacy-policy
+#
+#  Or: You may also use this code under the terms of the GPL v3 (see
+#  www.gnu.org/licenses).
 #
 #  JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
 #  EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -76,8 +83,10 @@ endfunction()
 
 macro(_juce_make_absolute path)
     if(NOT IS_ABSOLUTE "${${path}}")
-        get_filename_component("${path}" "${${path}}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
+        get_filename_component(${path} "${${path}}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
     endif()
+
+    string(REGEX REPLACE "\\\\" "/" ${path} "${${path}}")
 endmacro()
 
 macro(_juce_make_absolute_and_check path)
@@ -227,7 +236,7 @@ endfunction()
 # ==================================================================================================
 
 function(_juce_get_all_plugin_kinds out)
-    set(${out} AU AUv3 AAX Standalone Unity VST VST3 PARENT_SCOPE)
+    set(${out} AU AUv3 AAX LV2 Standalone Unity VST VST3 PARENT_SCOPE)
 endfunction()
 
 function(_juce_get_platform_plugin_kinds out)
@@ -242,7 +251,11 @@ function(_juce_get_platform_plugin_kinds out)
     endif()
 
     if(NOT CMAKE_SYSTEM_NAME STREQUAL "iOS" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
-        list(APPEND result AAX Unity VST VST3)
+        list(APPEND result Unity VST VST3 LV2)
+    endif()
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        list(APPEND result AAX)
     endif()
 
     set(${out} ${result} PARENT_SCOPE)
@@ -489,8 +502,30 @@ function(juce_add_module module_path)
 
         target_link_libraries(juce_audio_processors INTERFACE juce_vst3_headers)
 
+        add_library(juce_lilv_headers INTERFACE)
+        set(lv2_base_path "${base_path}/juce_audio_processors/format_types/LV2_SDK")
+        target_include_directories(juce_lilv_headers INTERFACE
+            "${lv2_base_path}"
+            "${lv2_base_path}/lv2"
+            "${lv2_base_path}/serd"
+            "${lv2_base_path}/sord"
+            "${lv2_base_path}/sord/src"
+            "${lv2_base_path}/sratom"
+            "${lv2_base_path}/lilv"
+            "${lv2_base_path}/lilv/src")
+        target_link_libraries(juce_audio_processors INTERFACE juce_lilv_headers)
+
+        add_library(juce_ara_headers INTERFACE)
+
+        target_include_directories(juce_ara_headers INTERFACE
+            "$<$<TARGET_EXISTS:juce_ara_sdk>:$<TARGET_PROPERTY:juce_ara_sdk,INTERFACE_INCLUDE_DIRECTORIES>>")
+
+        target_link_libraries(juce_audio_processors INTERFACE juce_ara_headers)
+
         if(JUCE_ARG_ALIAS_NAMESPACE)
             add_library(${JUCE_ARG_ALIAS_NAMESPACE}::juce_vst3_headers ALIAS juce_vst3_headers)
+            add_library(${JUCE_ARG_ALIAS_NAMESPACE}::juce_lilv_headers ALIAS juce_lilv_headers)
+            add_library(${JUCE_ARG_ALIAS_NAMESPACE}::juce_ara_headers ALIAS juce_ara_headers)
         endif()
     endif()
 

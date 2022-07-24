@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics
- exporters:        xcode_mac, vs2019, linux_make
+ exporters:        xcode_mac, vs2022, linux_make
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -303,7 +303,7 @@ public:
     child process to launch when the command line parameters indicate that we're
     being asked to run as a child process.
 */
-bool invokeChildProcessDemo (const String& commandLine)
+inline bool invokeChildProcessDemo (const String& commandLine)
 {
     auto worker = std::make_unique<DemoWorkerProcess>();
 

@@ -1,50 +1,59 @@
 JUCE breaking changes
 =====================
 
-Version 6.1.3
+Version 7.0.0
 =============
 
 Change
 ------
-The format specific structs of ExtensionsVisitor now return pointers to forward
-declared types instead of `void*`. For this purpose the `struct AEffect;`
-forward declaration was placed inside the global namespace.
+AudioProcessor::getHostTimeNs() and AudioProcessor::setHostTimeNanos() have
+been removed.
 
 Possible Issues
 ---------------
-User code that includes the VST headers inside a namespace may fail to build,
-because the forward declared type can collide with the contents of `aeffect.h`.
+Code that used these functions will no longer compile.
 
 Workaround
 ----------
-The collision can be avoided by placing a `struct AEffect;` forward declaration
-in the same namespace where the VST headers are included. The forward
-declaration must come before the inclusion.
+Set and get the system time corresponding to the current audio callback using
+the new functions AudioPlayHead::PositionInfo::getHostTimeNs() and
+AudioPlayHead::PositionInfo::setHostTimeNs().
 
 Rationale
 ---------
-Using the forward declared types eliminates the need for error prone casting
-at the site where the ExtensionsVisitor facility is used.
+This change consolidates callback-related timing information into the
+PositionInfo type, improving the consistency of the AudioProcessor and
+AudioPlayHead APIs.
 
 
 Change
 ------
-ListBox::createSnapshotOfRows now returns ScaledImage instead of Image.
+AudioPlayHead::getCurrentPosition() has been deprecated and replaced with
+AudioPlayHead::getPosition().
 
 Possible Issues
 ---------------
-User code that overrides this function will fail to build.
+Hosts that implemented custom playhead types may no longer compile. Plugins
+that used host-provided timing information may trigger deprecation warnings
+when building.
 
 Workaround
 ----------
-To emulate the old behaviour, simply wrap the Image that was previous returned
-into a ScaledImage and return that instead.
+Classes that derive from AudioPlayHead must now override getPosition() instead
+of getCurrentPosition(). Code that used to use the playhead's
+CurrentPositionInfo must switch to using the new PositionInfo type.
 
 Rationale
 ---------
-Returning a ScaledImage allows the overriding function to specify the scale
-at which the image should be drawn. Returning an oversampled image will provide
-smoother-looking results on high resolution displays.
+Not all hosts and plugin formats are capable of providing the full complement
+of timing information contained in the old CurrentPositionInfo class.
+Previously, in the case that some information could not be provided, fallback
+values would be used instead, but it was not possible for clients to distinguish
+between "real" values set explicitly by the host, and "fallback" values set by
+a plugin wrapper. The new PositionInfo type keeps track of which members have
+been explicitly set, so clients can implement their own fallback behaviour.
+The new PositionInfo type also includes a new "barCount" member, which is
+currently only used by the LV2 host and client.
 
 
 Change

@@ -130,7 +130,7 @@ namespace juce
 //==============================================================================
 namespace DSoundLogging
 {
-    String getErrorMessage (HRESULT hr)
+    static String getErrorMessage (HRESULT hr)
     {
         const char* result = nullptr;
 
@@ -1016,9 +1016,12 @@ public:
 
             if (isStarted)
             {
-                callback->audioDeviceIOCallback (inputBuffers.getArrayOfReadPointers(), inputBuffers.getNumChannels(),
-                                                 outputBuffers.getArrayOfWritePointers(), outputBuffers.getNumChannels(),
-                                                 bufferSizeSamples);
+                callback->audioDeviceIOCallbackWithContext (inputBuffers.getArrayOfReadPointers(),
+                                                            inputBuffers.getNumChannels(),
+                                                            outputBuffers.getArrayOfWritePointers(),
+                                                            outputBuffers.getNumChannels(),
+                                                            bufferSizeSamples,
+                                                            {});
             }
             else
             {

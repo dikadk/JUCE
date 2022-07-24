@@ -33,7 +33,7 @@
                    juce_audio_processors, juce_audio_utils, juce_core,
                    juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics, juce_gui_extra
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, linux_make, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -241,16 +241,17 @@ public:
 
 private:
     //==============================================================================
-    struct MidiDeviceListBox : public ListBox,
-                               private ListBoxModel
+    struct MidiDeviceListBox : private ListBoxModel,
+                               public ListBox
     {
         MidiDeviceListBox (const String& name,
                            MidiDemo& contentComponent,
                            bool isInputDeviceList)
-            : ListBox (name, this),
+            : ListBox (name),
               parent (contentComponent),
               isInput (isInputDeviceList)
         {
+            setModel (this);
             setOutlineThickness (1);
             setMultipleSelectionEnabled (true);
             setClickingTogglesRowSelection (true);

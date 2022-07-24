@@ -1,13 +1,20 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE 7 technical preview.
+   This file is part of the JUCE library.
    Copyright (c) 2022 - Raw Material Software Limited
 
-   You may use this code under the terms of the GPL v3
-   (see www.gnu.org/licenses).
+   JUCE is an open source library subject to commercial or open-source
+   licensing.
 
-   For the technical preview this file cannot be licensed commercially.
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
+
+   End User License Agreement: www.juce.com/juce-7-licence
+   Privacy Policy: www.juce.com/juce-privacy-policy
+
+   Or: You may also use this code under the terms of the GPL v3 (see
+   www.gnu.org/licenses).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -708,7 +715,7 @@ namespace
 
     static bool isValidPathIdentifier (const String& id, const String& os)
     {
-        return id == "vstLegacyPath" || (id == "aaxPath" && os != "linux") || (id == "rtasPath" && os != "linux")
+        return id == "vstLegacyPath" || (id == "aaxPath" && os != "linux") || id == "araPath"
             || id == "androidSDKPath" || id == "defaultJuceModulePath" || id == "defaultUserModulePath";
     }
 
@@ -870,7 +877,7 @@ namespace
                   << std::endl
                   << " " << appName << " --set-global-search-path os identifier_to_set new_path" << std::endl
                   << "    Sets the global path for a specified os and identifier. The os should be either osx, windows or linux and the identifiers can be any of the following: "
-                  << "defaultJuceModulePath, defaultUserModulePath, vstLegacyPath, aaxPath (not valid on linux), rtasPath (not valid on linux), or androidSDKPath. " << std::endl
+                  << "defaultJuceModulePath, defaultUserModulePath, vstLegacyPath, aaxPath (not valid on linux), or androidSDKPath. " << std::endl
                   << std::endl
                   << " " << appName << " --create-project-from-pip path/to/PIP path/to/output path/to/JUCE/modules (optional) path/to/user/modules (optional)" << std::endl
                   << "    Generates a folder containing a JUCE project in the specified output path using the specified PIP file. Use the optional JUCE and user module paths to override "

@@ -1,13 +1,20 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE 7 technical preview.
+   This file is part of the JUCE library.
    Copyright (c) 2022 - Raw Material Software Limited
 
-   You may use this code under the terms of the GPL v3
-   (see www.gnu.org/licenses).
+   JUCE is an open source library subject to commercial or open-source
+   licensing.
 
-   For the technical preview this file cannot be licensed commercially.
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
+
+   End User License Agreement: www.juce.com/juce-7-licence
+   Privacy Policy: www.juce.com/juce-privacy-policy
+
+   Or: You may also use this code under the terms of the GPL v3 (see
+   www.gnu.org/licenses).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -15,6 +22,7 @@
 
   ==============================================================================
 */
+
 
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
@@ -27,7 +35,7 @@
 
   ID:                 juce_box2d
   vendor:             juce
-  version:            6.1.6
+  version:            7.0.1
   name:               JUCE wrapper for the Box2D physics engine
   description:        The Box2D physics engine and some utility classes.
   website:            http://www.juce.com/juce
@@ -40,17 +48,19 @@
 
 *******************************************************************************/
 
+
 #pragma once
 #define JUCE_BOX2D_H_INCLUDED
 
 //==============================================================================
 #include <juce_graphics/juce_graphics.h>
 
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wconversion",
-                                    "-Wshadow-field",
-                                    "-Wzero-as-null-pointer-constant",
-                                    "-Wsign-conversion",
-                                    "-Wdeprecated")
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wconversion",
+                                     "-Wshadow-field",
+                                     "-Wzero-as-null-pointer-constant",
+                                     "-Wsign-conversion",
+                                     "-Wdeprecated",
+                                     "-Wmaybe-uninitialized")
 
 #include <climits>
 #include <cfloat>
@@ -60,5 +70,5 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wconversion",
 JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
 #ifndef DOXYGEN // for some reason, Doxygen sees this as a re-definition of Box2DRenderer
-#include "utils/juce_Box2DRenderer.h"
+ #include "utils/juce_Box2DRenderer.h"
 #endif // DOXYGEN

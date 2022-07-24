@@ -711,11 +711,12 @@ public:
 
                 if (callback != nullptr)
                 {
-                    callback->audioDeviceIOCallback (inputChannelDataForCallback.getRawDataPointer(),
-                                                     inputChannelDataForCallback.size(),
-                                                     outputChannelDataForCallback.getRawDataPointer(),
-                                                     outputChannelDataForCallback.size(),
-                                                     bufferSize);
+                    callback->audioDeviceIOCallbackWithContext (inputChannelDataForCallback.getRawDataPointer(),
+                                                                inputChannelDataForCallback.size(),
+                                                                outputChannelDataForCallback.getRawDataPointer(),
+                                                                outputChannelDataForCallback.size(),
+                                                                bufferSize,
+                                                                {});
                 }
                 else
                 {
@@ -1287,12 +1288,12 @@ private:
 }
 
 //==============================================================================
-AudioIODeviceType* createAudioIODeviceType_ALSA_Soundcards()
+static inline AudioIODeviceType* createAudioIODeviceType_ALSA_Soundcards()
 {
     return new ALSAAudioIODeviceType (true, "ALSA HW");
 }
 
-AudioIODeviceType* createAudioIODeviceType_ALSA_PCMDevices()
+static inline AudioIODeviceType* createAudioIODeviceType_ALSA_PCMDevices()
 {
     return new ALSAAudioIODeviceType (false, "ALSA");
 }

@@ -1,13 +1,20 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE 7 technical preview.
+   This file is part of the JUCE library.
    Copyright (c) 2022 - Raw Material Software Limited
 
-   You may use this code under the terms of the GPL v3
-   (see www.gnu.org/licenses).
+   JUCE is an open source library subject to commercial or open-source
+   licensing.
 
-   For the technical preview this file cannot be licensed commercially.
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
+
+   End User License Agreement: www.juce.com/juce-7-licence
+   Privacy Policy: www.juce.com/juce-privacy-policy
+
+   Or: You may also use this code under the terms of the GPL v3 (see
+   www.gnu.org/licenses).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -206,6 +213,11 @@ void PIPGenerator::createFiles (ValueTree& jucerTree)
     jucerTree.addChild (mainGroup, 0, nullptr);
 }
 
+String PIPGenerator::getDocumentControllerClass() const
+{
+    return metadata.getProperty (Ids::documentControllerClass, "").toString();
+}
+
 ValueTree PIPGenerator::createModulePathChild (const String& moduleID)
 {
     ValueTree modulePath (Ids::MODULEPATH);
@@ -376,6 +388,9 @@ Result PIPGenerator::setProjectSettings (ValueTree& jucerTree)
         StringArray pluginFormatsToBuild (Ids::buildVST3.toString(), Ids::buildAU.toString(), Ids::buildStandalone.toString());
         pluginFormatsToBuild.addArray (getExtraPluginFormatsToBuild());
 
+        if (getDocumentControllerClass().isNotEmpty())
+            pluginFormatsToBuild.add (Ids::enableARA.toString());
+
         jucerTree.setProperty (Ids::pluginFormats, pluginFormatsToBuild.joinIntoString (","), nullptr);
 
         const auto characteristics = metadata[Ids::pluginCharacteristics].toString();
@@ -414,6 +429,7 @@ void PIPGenerator::setModuleFlags (ValueTree& jucerTree)
 String PIPGenerator::getMainFileTextForType()
 {
     const auto type = metadata[Ids::type].toString();
+    const auto documentControllerClass = getDocumentControllerClass();
 
     const auto mainTemplate = [&]
     {
@@ -427,8 +443,17 @@ String PIPGenerator::getMainFileTextForType()
                    .replace ("${JUCE_PIP_MAIN_CLASS}", metadata[Ids::mainClass].toString());
 
         if (type == "AudioProcessor")
+        {
+            if (documentControllerClass.isNotEmpty())
+            {
+                return String (BinaryData::PIPAudioProcessorWithARA_cpp_in)
+                       .replace ("${JUCE_PIP_MAIN_CLASS}", metadata[Ids::mainClass].toString())
+                       .replace ("${JUCE_PIP_DOCUMENTCONTROLLER_CLASS}", documentControllerClass);
+            }
+
             return String (BinaryData::PIPAudioProcessor_cpp_in)
                    .replace ("${JUCE_PIP_MAIN_CLASS}", metadata[Ids::mainClass].toString());
+        }
 
         return String{};
     }();
