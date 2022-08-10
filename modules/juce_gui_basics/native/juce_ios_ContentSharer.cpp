@@ -26,213 +26,182 @@
 namespace juce
 {
 
-#if !defined(__IPHONE_10_0) || __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_10_0
-    using UIActivityType = NSString *;
-#endif
-
-    class ContentSharer::ContentSharerNativeImpl : public ContentSharer::Pimpl,
-                                                   private Component
+class ContentSharer::ContentSharerNativeImpl    : public ContentSharer::Pimpl,
+                                                  private Component
+{
+public:
+    ContentSharerNativeImpl (ContentSharer& cs)
+        : owner (cs)
     {
-    public:
-        ContentSharerNativeImpl(ContentSharer &cs)
-            : owner(cs)
-        {
-            static PopoverDelegateClass cls;
-            JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wobjc-method-access")
-            popoverDelegate.reset([cls.createInstance() initWithContentSharerNativeImpl:this]);
-            JUCE_END_IGNORE_WARNINGS_GCC_LIKE
-        }
+        static PopoverDelegateClass cls;
+        popoverDelegate.reset ([cls.createInstance() init]);
+    }
 
-        ~ContentSharerNativeImpl() override
-        {
-            exitModalState(0);
-        }
+    ~ContentSharerNativeImpl() override
+    {
+        exitModalState (0);
+    }
 
-        void shareFiles(const Array<URL> &files) override
-        {
-            auto urls = [NSMutableArray arrayWithCapacity:(NSUInteger)files.size()];
+    void shareFiles (const Array<URL>& files) override
+    {
+        auto urls = [NSMutableArray arrayWithCapacity: (NSUInteger) files.size()];
 
-            for (const auto &f : files)
+        for (const auto& f : files)
+        {
+            NSString* nativeFilePath = nil;
+
+            if (f.isLocalFile())
             {
-                NSString *nativeFilePath = nil;
-
-                if (f.isLocalFile())
-                {
-                    nativeFilePath = juceStringToNS(f.getLocalFile().getFullPathName());
-                }
-                else
-                {
-                    auto filePath = f.toString(false);
-
-                    auto *fileDirectory = filePath.contains("/")
-                                              ? juceStringToNS(filePath.upToLastOccurrenceOf("/", false, false))
-                                              : [NSString string];
-
-                    auto fileName = juceStringToNS(filePath.fromLastOccurrenceOf("/", false, false)
-                                                       .upToLastOccurrenceOf(".", false, false));
-
-                    auto fileExt = juceStringToNS(filePath.fromLastOccurrenceOf(".", false, false));
-
-                    if ([fileDirectory length] == NSUInteger(0))
-                        nativeFilePath = [[NSBundle mainBundle] pathForResource:fileName
-                                                                         ofType:fileExt];
-                    else
-                        nativeFilePath = [[NSBundle mainBundle] pathForResource:fileName
-                                                                         ofType:fileExt
-                                                                    inDirectory:fileDirectory];
-                }
-
-                if (nativeFilePath != nil)
-                    [urls addObject:[NSURL fileURLWithPath:nativeFilePath]];
-            }
-
-            share(urls);
-        }
-
-        void shareText(const String &text) override
-        {
-            auto array = [NSArray arrayWithObject:juceStringToNS(text)];
-            share(array);
-        }
-
-    private:
-        void share(NSArray *items)
-        {
-            if ([items count] == 0)
-            {
-                jassertfalse;
-                owner.sharingFinished(false, "No valid items found for sharing.");
-                return;
-            }
-
-            controller.reset([[UIActivityViewController alloc] initWithActivityItems:items
-                                                               applicationActivities:nil]);
-
-            controller.get().excludedActivityTypes = nil;
-
-            controller.get().completionWithItemsHandler = ^(UIActivityType type, BOOL completed,
-                                                            NSArray *returnedItems, NSError *error) {
-              ignoreUnused(type);
-              ignoreUnused(returnedItems);
-
-              // In some odd cases (e.g. with 'Save to Files' activity, but only if it's dismissed
-              // by tapping Cancel and not outside the modal window), completionWithItemsHandler
-              // may be called twice: when an activity is cancelled and when the
-              // UIActivityViewController itself is dismissed. We must make sure exitModalState()
-              // doesn't get called twice - checking presentingViewController seems to do the trick.
-              if (controller.get().presentingViewController == nil)
-              {
-                  succeeded = completed;
-
-                  if (error != nil)
-                      errorDescription = nsStringToJuce([error localizedDescription]);
-
-                  exitModalState(0);
-              }
-            };
-
-            controller.get().modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-
-            auto bounds = Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
-            setBounds(bounds);
-
-            setAlwaysOnTop(true);
-
-            if (owner.parentComponent != nullptr)
-            {
-                owner.parentComponent->addAndMakeVisible(this);
+                nativeFilePath = juceStringToNS (f.getLocalFile().getFullPathName());
             }
             else
             {
-                setVisible(true);
-                addToDesktop(0);
+                auto filePath = f.toString (false);
+
+                auto* fileDirectory = filePath.contains ("/")
+                                    ? juceStringToNS (filePath.upToLastOccurrenceOf ("/", false, false))
+                                    : [NSString string];
+
+                auto fileName = juceStringToNS (filePath.fromLastOccurrenceOf ("/", false, false)
+                                                        .upToLastOccurrenceOf (".", false, false));
+
+                auto fileExt = juceStringToNS (filePath.fromLastOccurrenceOf (".", false, false));
+
+                if ([fileDirectory length] == NSUInteger (0))
+                    nativeFilePath = [[NSBundle mainBundle] pathForResource: fileName
+                                                                     ofType: fileExt];
+                else
+                    nativeFilePath = [[NSBundle mainBundle] pathForResource: fileName
+                                                                     ofType: fileExt
+                                                                inDirectory: fileDirectory];
             }
 
-            enterModalState(true,
-                            ModalCallbackFunction::create([this](int)
-                                                          { owner.sharingFinished(succeeded, errorDescription); }),
-                            false);
+            if (nativeFilePath != nil)
+                [urls addObject: [NSURL fileURLWithPath: nativeFilePath]];
         }
 
-        static bool isIPad()
+        share (urls);
+    }
+
+    void shareText (const String& text) override
+    {
+        auto array = [NSArray arrayWithObject: juceStringToNS (text)];
+        share (array);
+    }
+
+private:
+    void share (NSArray* items)
+    {
+        if ([items count] == 0)
         {
-            return [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad;
+            jassertfalse;
+            owner.sharingFinished (false, "No valid items found for sharing.");
+            return;
         }
 
-        //==============================================================================
-        void parentHierarchyChanged() override
+        controller.reset ([[UIActivityViewController alloc] initWithActivityItems: items
+                                                            applicationActivities: nil]);
+
+        controller.get().excludedActivityTypes = nil;
+
+        controller.get().completionWithItemsHandler = ^ (UIActivityType type, BOOL completed,
+                                                         NSArray* returnedItems, NSError* error)
         {
-            auto *newPeer = dynamic_cast<UIViewComponentPeer *>(getPeer());
+            ignoreUnused (type);
+            ignoreUnused (returnedItems);
 
-            if (peer != newPeer)
-            {
-                peer = newPeer;
+            succeeded = completed;
 
-                if (isIPad())
-                {
-                    auto *popoverController = controller.get().popoverPresentationController;
-                    popoverController.sourceView = peer->view;
-                    popoverController.sourceRect = getPopoverSourceRect();
-                    popoverController.canOverlapSourceViewRect = YES;
-                    popoverController.delegate = popoverDelegate.get();
-                }
+            if (error != nil)
+                errorDescription = nsStringToJuce ([error localizedDescription]);
 
-                if (auto *parentController = peer->controller)
-                    [parentController showViewController:controller.get() sender:parentController];
-            }
-        }
-
-        CGRect getPopoverSourceRect()
-        {
-            auto bounds = peer->view.bounds;
-
-            return owner.sourceComponent == nullptr
-                       ? CGRectMake(0.f, bounds.size.height - 10.f, bounds.size.width, 10.f)
-                       : makeCGRect(peer->getAreaCoveredBy(*owner.sourceComponent.getComponent()));
-        }
-
-        //==============================================================================
-        struct PopoverDelegateClass : public ObjCClass<NSObject<UIPopoverPresentationControllerDelegate> >
-        {
-            PopoverDelegateClass() : ObjCClass<NSObject<UIPopoverPresentationControllerDelegate> >("PopoverDelegateClass_")
-            {
-                addIvar<ContentSharer::ContentSharerNativeImpl *>("nativeSharer");
-
-                JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wundeclared-selector")
-                addMethod(@selector (initWithContentSharerNativeImpl:), initWithContentSharerNativeImpl);
-                JUCE_END_IGNORE_WARNINGS_GCC_LIKE
-
-                addMethod(@selector (popoverPresentationController:willRepositionPopoverToRect:inView:), willRepositionPopover);
-                registerClass();
-            }
-
-            static id initWithContentSharerNativeImpl(id _self, SEL, ContentSharer::ContentSharerNativeImpl *nativeSharer)
-            {
-                NSObject *self = sendSuperclassMessage<NSObject *>(_self, @selector(init));
-                object_setInstanceVariable(self, "nativeSharer", nativeSharer);
-                return self;
-            }
-
-            //==============================================================================
-            static void willRepositionPopover(id self, SEL, UIPopoverPresentationController *, CGRect *rect, UIView *)
-            {
-                *rect = getIvar<ContentSharer::ContentSharerNativeImpl *>(self, "nativeSharer")->getPopoverSourceRect();
-            }
+            exitModalState (0);
         };
 
-        ContentSharer &owner;
-        UIViewComponentPeer *peer = nullptr;
-        NSUniquePtr<UIActivityViewController> controller;
-        NSUniquePtr<NSObject<UIPopoverPresentationControllerDelegate> > popoverDelegate;
+        controller.get().modalTransitionStyle = UIModalTransitionStyleCoverVertical;
 
-        bool succeeded = false;
-        String errorDescription;
-    };
+        auto bounds = Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+        setBounds (bounds);
+
+        setAlwaysOnTop (true);
+        setVisible (true);
+        addToDesktop (0);
+
+        enterModalState (true,
+                         ModalCallbackFunction::create ([this] (int)
+                         {
+                             owner.sharingFinished (succeeded, errorDescription);
+                         }),
+                         false);
+    }
+
+    static bool isIPad()
+    {
+        return [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad;
+    }
 
     //==============================================================================
-    ContentSharer::Pimpl *ContentSharer::createPimpl()
+    void parentHierarchyChanged() override
     {
-        return new ContentSharerNativeImpl(*this);
+        auto* newPeer = dynamic_cast<UIViewComponentPeer*> (getPeer());
+
+        if (peer != newPeer)
+        {
+            peer = newPeer;
+
+            if (isIPad())
+            {
+                controller.get().preferredContentSize = peer->view.frame.size;
+
+                auto screenBounds = [UIScreen mainScreen].bounds;
+
+                auto* popoverController = controller.get().popoverPresentationController;
+                popoverController.sourceView = peer->view;
+                popoverController.sourceRect = CGRectMake (0.f, screenBounds.size.height - 10.f, screenBounds.size.width, 10.f);
+                popoverController.canOverlapSourceViewRect = YES;
+                popoverController.delegate = popoverDelegate.get();
+            }
+
+            if (auto* parentController = peer->controller)
+                [parentController showViewController: controller.get() sender: parentController];
+        }
     }
+
+    //==============================================================================
+    struct PopoverDelegateClass    : public ObjCClass<NSObject<UIPopoverPresentationControllerDelegate>>
+    {
+        PopoverDelegateClass()  : ObjCClass<NSObject<UIPopoverPresentationControllerDelegate>> ("PopoverDelegateClass_")
+        {
+            addMethod (@selector (popoverPresentationController:willRepositionPopoverToRect:inView:), willRepositionPopover);
+
+            registerClass();
+        }
+
+        //==============================================================================
+        static void willRepositionPopover (id, SEL, UIPopoverPresentationController*, CGRect* rect, UIView*)
+        {
+            auto screenBounds = [UIScreen mainScreen].bounds;
+
+            rect->origin.x = 0.f;
+            rect->origin.y = screenBounds.size.height - 10.f;
+            rect->size.width = screenBounds.size.width;
+            rect->size.height = 10.f;
+        }
+    };
+
+    ContentSharer& owner;
+    UIViewComponentPeer* peer = nullptr;
+    NSUniquePtr<UIActivityViewController> controller;
+    NSUniquePtr<NSObject<UIPopoverPresentationControllerDelegate>> popoverDelegate;
+
+    bool succeeded = false;
+    String errorDescription;
+};
+
+//==============================================================================
+ContentSharer::Pimpl* ContentSharer::createPimpl()
+{
+    return new ContentSharerNativeImpl (*this);
+}
 
 } // namespace juce
