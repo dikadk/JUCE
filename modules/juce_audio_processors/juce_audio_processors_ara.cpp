@@ -26,6 +26,8 @@
 #include <juce_core/system/juce_CompilerWarnings.h>
 #include <juce_core/system/juce_TargetPlatform.h>
 
+#include "utilities/ARA/juce_ARADebug.h"
+
 /* Having WIN32_LEAN_AND_MEAN defined at the point of including ARADebug.c will produce warnings.
 
    To prevent such problems it's easiest to have it in its own translation unit.
