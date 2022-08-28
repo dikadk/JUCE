@@ -125,8 +125,7 @@
     </VS2022>
     <XCODE_IPHONE targetFolder="Builds/iOS" iosScreenOrientation="" iPadScreenOrientation=""
                   iosDeviceFamily="1,2" microphonePermissionNeeded="1" iosBackgroundAudio="1"
-                  iosBackgroundBle="1" smallIcon="c97aUr" bigIcon="c97aUr" customXcodeResourceFolders="../../examples/Assets"
-                  iosDevelopmentTeamID="KCZUTH74SA">
+                  iosBackgroundBle="1" smallIcon="c97aUr" bigIcon="c97aUr" customXcodeResourceFolders="../../examples/Assets">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" enablePluginBinaryCopyStep="1" isDebug="1" optimisation="1"
                        linkTimeOptimisation="0" targetName="Plugin Host" recommendedWarnings="LLVM"/>
