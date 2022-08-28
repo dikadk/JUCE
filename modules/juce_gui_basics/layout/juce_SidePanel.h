@@ -197,7 +197,6 @@ public:
     void mouseUp (const MouseEvent&) override;
 
     int panelWidth = 0;
-    Label titleLabel;
 
 private:
     //==============================================================================
