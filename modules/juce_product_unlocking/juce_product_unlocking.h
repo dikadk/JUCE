@@ -23,6 +23,7 @@
   ==============================================================================
 */
 
+
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -47,6 +48,7 @@
 
 *******************************************************************************/
 
+
 #pragma once
 #define JUCE_PRODUCT_UNLOCKING_H_INCLUDED
 
@@ -70,24 +72,24 @@
 #include <juce_events/juce_events.h>
 
 #if JUCE_MODULE_AVAILABLE_juce_data_structures
-#include <juce_data_structures/juce_data_structures.h>
+ #include <juce_data_structures/juce_data_structures.h>
 #endif
 
 #if JUCE_MODULE_AVAILABLE_juce_gui_extra
-#include <juce_gui_extra/juce_gui_extra.h>
+ #include <juce_gui_extra/juce_gui_extra.h>
 #endif
 
 #if JUCE_IN_APP_PURCHASES
-#include "in_app_purchases/juce_InAppPurchases.h"
+ #include "in_app_purchases/juce_InAppPurchases.h"
 #endif
 
 #if JUCE_MODULE_AVAILABLE_juce_data_structures
-#include "marketplace/juce_OnlineUnlockStatus.h"
-#include "marketplace/juce_TracktionMarketplaceStatus.h"
+ #include "marketplace/juce_OnlineUnlockStatus.h"
+ #include "marketplace/juce_TracktionMarketplaceStatus.h"
 #endif
 
 #include "marketplace/juce_KeyFileGeneration.h"
 
 #if JUCE_MODULE_AVAILABLE_juce_gui_extra
-#include "marketplace/juce_OnlineUnlockForm.h"
+ #include "marketplace/juce_OnlineUnlockForm.h"
 #endif

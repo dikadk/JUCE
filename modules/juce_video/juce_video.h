@@ -23,6 +23,7 @@
   ==============================================================================
 */
 
+
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -49,6 +50,7 @@
 
 *******************************************************************************/
 
+
 #pragma once
 #define JUCE_VIDEO_H_INCLUDED
 
@@ -60,23 +62,21 @@
     Enables camera support using the CameraDevice class (Mac, Windows, iOS, Android).
 */
 #ifndef JUCE_USE_CAMERA
-#define JUCE_USE_CAMERA 0
+ #define JUCE_USE_CAMERA 0
 #endif
 
 #ifndef JUCE_CAMERA_LOG_ENABLED
-#define JUCE_CAMERA_LOG_ENABLED 0
+ #define JUCE_CAMERA_LOG_ENABLED 0
 #endif
 
 #if JUCE_CAMERA_LOG_ENABLED
-#define JUCE_CAMERA_LOG(x) DBG(x)
+ #define JUCE_CAMERA_LOG(x) DBG(x)
 #else
-#define JUCE_CAMERA_LOG(x) \
-  {                        \
-  }
+ #define JUCE_CAMERA_LOG(x) {}
 #endif
 
-#if !(JUCE_MAC || JUCE_WINDOWS || JUCE_IOS || JUCE_ANDROID)
-#undef JUCE_USE_CAMERA
+#if ! (JUCE_MAC || JUCE_WINDOWS || JUCE_IOS || JUCE_ANDROID)
+ #undef JUCE_USE_CAMERA
 #endif
 
 //==============================================================================
@@ -85,19 +85,17 @@
     Currently supported on Android only.
  */
 #ifndef JUCE_SYNC_VIDEO_VOLUME_WITH_OS_MEDIA_VOLUME
-#define JUCE_SYNC_VIDEO_VOLUME_WITH_OS_MEDIA_VOLUME 1
+ #define JUCE_SYNC_VIDEO_VOLUME_WITH_OS_MEDIA_VOLUME 1
 #endif
 
 #ifndef JUCE_VIDEO_LOG_ENABLED
-#define JUCE_VIDEO_LOG_ENABLED 1
+ #define JUCE_VIDEO_LOG_ENABLED 1
 #endif
 
 #if JUCE_VIDEO_LOG_ENABLED
-#define JUCE_VIDEO_LOG(x) DBG(x)
+ #define JUCE_VIDEO_LOG(x) DBG(x)
 #else
-#define JUCE_VIDEO_LOG(x) \
-  {                       \
-  }
+ #define JUCE_VIDEO_LOG(x) {}
 #endif
 
 //==============================================================================

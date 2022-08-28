@@ -5452,7 +5452,7 @@ private:
 
             if (iter != cursorsBySize.end())
                 return iter->second;
-            
+
             const auto logicalSize = info.image.getScaledBounds();
             const auto scale = (float) size / (float) unityCursorSize;
             const auto physicalSize = logicalSize * scale;

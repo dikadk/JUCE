@@ -334,16 +334,16 @@ private:
         static Native* getOwner (id self)               { return getIvar<Native*> (self, "owner"); }
 
         //==============================================================================
-        static void didPickDocumentsAtURLs (id self, SEL, UIDocumentPickerViewController*, NSArray<NSURL*>* urls)
-        {
-            if (auto* picker = getOwner (self))
-                picker->didPickDocumentsAtURLs (urls);
-        }
-
         static void didPickDocumentAtURL (id self, SEL, UIDocumentPickerViewController*, NSURL* url)
         {
             if (auto* picker = getOwner (self))
                 picker->didPickDocumentsAtURLs (@[url]);
+        }
+
+        static void didPickDocumentsAtURLs (id self, SEL, UIDocumentPickerViewController*, NSArray<NSURL*>* urls)
+        {
+            if (auto* picker = getOwner (self))
+                picker->didPickDocumentsAtURLs (urls);
         }
 
         static void documentPickerWasCancelled (id self, SEL, UIDocumentPickerViewController*)

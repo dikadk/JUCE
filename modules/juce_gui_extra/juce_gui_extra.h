@@ -23,6 +23,7 @@
   ==============================================================================
 */
 
+
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -51,6 +52,7 @@
 
 *******************************************************************************/
 
+
 #pragma once
 #define JUCE_GUI_EXTRA_H_INCLUDED
 
@@ -62,7 +64,7 @@
     If you're not using any embedded web-pages, turning this off may reduce your code size.
 */
 #ifndef JUCE_WEB_BROWSER
-#define JUCE_WEB_BROWSER 1
+ #define JUCE_WEB_BROWSER 1
 #endif
 
 /** Config: JUCE_USE_WIN_WEBVIEW2
@@ -78,7 +80,7 @@
     class for more details.
 */
 #ifndef JUCE_USE_WIN_WEBVIEW2
-#define JUCE_USE_WIN_WEBVIEW2 0
+ #define JUCE_USE_WIN_WEBVIEW2 0
 #endif
 
 /** Config: JUCE_ENABLE_LIVE_CONSTANT_EDITOR
@@ -87,9 +89,9 @@
     for that macro for more details.
 */
 #ifndef JUCE_ENABLE_LIVE_CONSTANT_EDITOR
-#if JUCE_DEBUG && !(JUCE_IOS || JUCE_ANDROID)
-#define JUCE_ENABLE_LIVE_CONSTANT_EDITOR 1
-#endif
+ #if JUCE_DEBUG && ! (JUCE_IOS || JUCE_ANDROID)
+  #define JUCE_ENABLE_LIVE_CONSTANT_EDITOR 1
+ #endif
 #endif
 
 //==============================================================================

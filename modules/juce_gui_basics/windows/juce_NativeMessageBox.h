@@ -26,17 +26,17 @@
 namespace juce
 {
 
-    //==============================================================================
-    /**
+//==============================================================================
+/**
     This class contains some static methods for showing native alert windows.
 
     @tags{GUI}
 */
-    class NativeMessageBox
-    {
-    public:
-#if JUCE_MODAL_LOOPS_PERMITTED
-        /** Shows a dialog box that just has a message and a single 'ok' button to close it.
+class NativeMessageBox
+{
+public:
+   #if JUCE_MODAL_LOOPS_PERMITTED
+    /** Shows a dialog box that just has a message and a single 'ok' button to close it.
 
         The box is shown modally, and the method will block until the user has clicked its
         button (or pressed the escape or return keys).
@@ -48,13 +48,12 @@ namespace juce
                             alert window should be associated with. Depending on the look
                             and feel, this might be used for positioning of the alert window.
     */
+    static void JUCE_CALLTYPE showMessageBox (MessageBoxIconType iconType,
+                                              const String& title,
+                                              const String& message,
+                                              Component* associatedComponent = nullptr);
 
-        static void JUCE_CALLTYPE showMessageBox(MessageBoxIconType iconType,
-                                                 const String &title,
-                                                 const String &message,
-                                                 Component *associatedComponent = nullptr);
-
-        /** Shows a dialog box using the specified options.
+    /** Shows a dialog box using the specified options.
 
         The box is shown modally, and the method will block until the user dismisses it.
 
@@ -64,10 +63,10 @@ namespace juce
 
         @see MessageBoxOptions
     */
-        static int JUCE_CALLTYPE show(const MessageBoxOptions &options);
-#endif
+    static int JUCE_CALLTYPE show (const MessageBoxOptions& options);
+   #endif
 
-        /** Shows a dialog box using the specified options.
+    /** Shows a dialog box using the specified options.
 
         The box will be displayed and placed into a modal state, but this method will return
         immediately, and the callback will be invoked later when the user dismisses the box.
@@ -82,10 +81,10 @@ namespace juce
 
         @see MessageBoxOptions
     */
-        static void JUCE_CALLTYPE showAsync(const MessageBoxOptions &options,
-                                            ModalComponentManager::Callback *callback);
+    static void JUCE_CALLTYPE showAsync (const MessageBoxOptions& options,
+                                         ModalComponentManager::Callback* callback);
 
-        /** Shows a dialog box using the specified options.
+    /** Shows a dialog box using the specified options.
 
         The box will be displayed and placed into a modal state, but this method will return
         immediately, and the callback will be invoked later when the user dismisses the box.
@@ -96,10 +95,10 @@ namespace juce
 
         @see MessageBoxOptions
     */
-        static void JUCE_CALLTYPE showAsync(const MessageBoxOptions &options,
-                                            std::function<void(int)> callback);
+    static void JUCE_CALLTYPE showAsync (const MessageBoxOptions& options,
+                                         std::function<void (int)> callback);
 
-        /** Shows a dialog box that just has a message and a single 'ok' button to close it.
+    /** Shows a dialog box that just has a message and a single 'ok' button to close it.
 
         The box will be displayed and placed into a modal state, but this method will return
         immediately, and the callback will be invoked later when the user dismisses the box.
@@ -119,13 +118,13 @@ namespace juce
 
         @see ModalCallbackFunction
     */
-        static void JUCE_CALLTYPE showMessageBoxAsync(MessageBoxIconType iconType,
-                                                      const String &title,
-                                                      const String &message,
-                                                      Component *associatedComponent = nullptr,
-                                                      ModalComponentManager::Callback *callback = nullptr);
+    static void JUCE_CALLTYPE showMessageBoxAsync (MessageBoxIconType iconType,
+                                                   const String& title,
+                                                   const String& message,
+                                                   Component* associatedComponent = nullptr,
+                                                   ModalComponentManager::Callback* callback = nullptr);
 
-        /** Shows a dialog box with two buttons.
+    /** Shows a dialog box with two buttons.
 
         Ideal for ok/cancel or yes/no choices. The return key can also be used
         to trigger the first button, and the escape key for the second button.
@@ -156,18 +155,18 @@ namespace juce
 
         @see ModalCallbackFunction
     */
-        static bool JUCE_CALLTYPE showOkCancelBox(MessageBoxIconType iconType,
-                                                  const String &title,
-                                                  const String &message,
-#if JUCE_MODAL_LOOPS_PERMITTED
-                                                  Component *associatedComponent = nullptr,
-                                                  ModalComponentManager::Callback *callback = nullptr);
-#else
-                                                  Component *associatedComponent,
-                                                  ModalComponentManager::Callback *callback);
-#endif
+    static bool JUCE_CALLTYPE showOkCancelBox (MessageBoxIconType iconType,
+                                               const String& title,
+                                               const String& message,
+                                              #if JUCE_MODAL_LOOPS_PERMITTED
+                                               Component* associatedComponent = nullptr,
+                                               ModalComponentManager::Callback* callback = nullptr);
+                                              #else
+                                               Component* associatedComponent,
+                                               ModalComponentManager::Callback* callback);
+                                              #endif
 
-        /** Shows a dialog box with three buttons.
+    /** Shows a dialog box with three buttons.
 
         Ideal for yes/no/cancel boxes.
 
@@ -202,18 +201,18 @@ namespace juce
 
         @see ModalCallbackFunction
     */
-        static int JUCE_CALLTYPE showYesNoCancelBox(MessageBoxIconType iconType,
-                                                    const String &title,
-                                                    const String &message,
-#if JUCE_MODAL_LOOPS_PERMITTED
-                                                    Component *associatedComponent = nullptr,
-                                                    ModalComponentManager::Callback *callback = nullptr);
-#else
-                                                    Component *associatedComponent,
-                                                    ModalComponentManager::Callback *callback);
-#endif
+    static int JUCE_CALLTYPE showYesNoCancelBox (MessageBoxIconType iconType,
+                                                 const String& title,
+                                                 const String& message,
+                                                #if JUCE_MODAL_LOOPS_PERMITTED
+                                                 Component* associatedComponent = nullptr,
+                                                 ModalComponentManager::Callback* callback = nullptr);
+                                                #else
+                                                 Component* associatedComponent,
+                                                 ModalComponentManager::Callback* callback);
+                                                #endif
 
-        /** Shows a dialog box with two buttons.
+    /** Shows a dialog box with two buttons.
 
         Ideal for yes/no boxes.
 
@@ -247,27 +246,27 @@ namespace juce
 
         @see ModalCallbackFunction
     */
+    static int JUCE_CALLTYPE showYesNoBox (MessageBoxIconType iconType,
+                                           const String& title,
+                                           const String& message,
+                                          #if JUCE_MODAL_LOOPS_PERMITTED
+                                           Component* associatedComponent = nullptr,
+                                           ModalComponentManager::Callback* callback = nullptr);
+                                          #else
+                                           Component* associatedComponent,
+                                           ModalComponentManager::Callback* callback);
+                                          #endif
 
-        static void JUCE_CALLTYPE showTextEditBox(const String &title,
+    /** Shows a TextEditBox*/
+    static void JUCE_CALLTYPE showTextEditBox(const String &title,
                                                   const String &message,
                                                   const String &textPlaceholder,
                                                   const String &prepopulatedText,
                                                   std::function<void(int, const String &)> callback);
 
-        static int JUCE_CALLTYPE showYesNoBox(MessageBoxIconType iconType,
-                                              const String &title,
-                                              const String &message,
-#if JUCE_MODAL_LOOPS_PERMITTED
-                                              Component *associatedComponent = nullptr,
-                                              ModalComponentManager::Callback *callback = nullptr);
-#else
-                                              Component *associatedComponent,
-                                              ModalComponentManager::Callback *callback);
-#endif
-
-    private:
-        NativeMessageBox() = delete;
-        JUCE_DECLARE_NON_COPYABLE(NativeMessageBox)
-    };
+private:
+    NativeMessageBox() = delete;
+    JUCE_DECLARE_NON_COPYABLE (NativeMessageBox)
+};
 
 } // namespace juce

@@ -20,6 +20,7 @@
   ==============================================================================
 */
 
+
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -44,6 +45,7 @@
 
 *******************************************************************************/
 
+
 #pragma once
 #define JUCE_EVENTS_H_INCLUDED
 
@@ -55,17 +57,17 @@
     you extra time to save your applications state.
 */
 #ifndef JUCE_EXECUTE_APP_SUSPEND_ON_BACKGROUND_TASK
-#define JUCE_EXECUTE_APP_SUSPEND_ON_BACKGROUND_TASK 0
+ #define JUCE_EXECUTE_APP_SUSPEND_ON_BACKGROUND_TASK 0
 #endif
 
 #if JUCE_WINDOWS && JUCE_EVENTS_INCLUDE_WINRT_WRAPPER
-// If this header file is missing then you are probably attempting to use WinRT
-// functionality without the WinRT libraries installed on your system. Try installing
-// the latest Windows Standalone SDK and maybe also adding the path to the WinRT
-// headers to your build system. This path should have the form
-// "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\winrt".
-#include <inspectable.h>
-#include <hstring.h>
+ // If this header file is missing then you are probably attempting to use WinRT
+ // functionality without the WinRT libraries installed on your system. Try installing
+ // the latest Windows Standalone SDK and maybe also adding the path to the WinRT
+ // headers to your build system. This path should have the form
+ // "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\winrt".
+ #include <inspectable.h>
+ #include <hstring.h>
 #endif
 
 #include "messages/juce_MessageManager.h"
@@ -91,14 +93,14 @@
 #include "native/juce_ScopedLowPowerModeDisabler.h"
 
 #if JUCE_LINUX || JUCE_BSD
-#include "native/juce_linux_EventLoop.h"
+ #include "native/juce_linux_EventLoop.h"
 #endif
 
 #if JUCE_WINDOWS
-#if JUCE_EVENTS_INCLUDE_WIN32_MESSAGE_WINDOW
-#include "native/juce_win32_HiddenMessageWindow.h"
-#endif
-#if JUCE_EVENTS_INCLUDE_WINRT_WRAPPER
-#include "native/juce_win32_WinRTWrapper.h"
-#endif
+ #if JUCE_EVENTS_INCLUDE_WIN32_MESSAGE_WINDOW
+  #include "native/juce_win32_HiddenMessageWindow.h"
+ #endif
+ #if JUCE_EVENTS_INCLUDE_WINRT_WRAPPER
+  #include "native/juce_win32_WinRTWrapper.h"
+ #endif
 #endif

@@ -23,6 +23,7 @@
   ==============================================================================
 */
 
+
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -48,6 +49,7 @@
  END_JUCE_MODULE_DECLARATION
 
 *******************************************************************************/
+
 
 #pragma once
 #define JUCE_AUDIO_FORMATS_H_INCLUDED
@@ -86,26 +88,26 @@
     of using this code, then do not enable this setting.
 */
 #ifndef JUCE_USE_MP3AUDIOFORMAT
-#define JUCE_USE_MP3AUDIOFORMAT 0
+ #define JUCE_USE_MP3AUDIOFORMAT 0
 #endif
 
 /** Config: JUCE_USE_LAME_AUDIO_FORMAT
     Enables the LameEncoderAudioFormat class.
 */
 #ifndef JUCE_USE_LAME_AUDIO_FORMAT
-#define JUCE_USE_LAME_AUDIO_FORMAT 0
+ #define JUCE_USE_LAME_AUDIO_FORMAT 0
 #endif
 
 /** Config: JUCE_USE_WINDOWS_MEDIA_FORMAT
     Enables the Windows Media SDK codecs.
 */
 #ifndef JUCE_USE_WINDOWS_MEDIA_FORMAT
-#define JUCE_USE_WINDOWS_MEDIA_FORMAT 1
+ #define JUCE_USE_WINDOWS_MEDIA_FORMAT 1
 #endif
 
-#if !JUCE_WINDOWS || JUCE_MINGW
-#undef JUCE_USE_WINDOWS_MEDIA_FORMAT
-#define JUCE_USE_WINDOWS_MEDIA_FORMAT 0
+#if ! JUCE_WINDOWS || JUCE_MINGW
+ #undef JUCE_USE_WINDOWS_MEDIA_FORMAT
+ #define JUCE_USE_WINDOWS_MEDIA_FORMAT 0
 #endif
 
 //==============================================================================

@@ -23,6 +23,7 @@
   ==============================================================================
 */
 
+
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
  the Projucer to automatically generate project code that uses it.
@@ -46,6 +47,7 @@
  END_JUCE_MODULE_DECLARATION
 
 *******************************************************************************/
+
 
 #pragma once
 #define JUCE_OSC_H_INCLUDED
