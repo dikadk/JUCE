@@ -37,7 +37,7 @@
   description:        Classes for audio buffer manipulation, midi message handling, synthesis, etc.
   website:            http://www.juce.com/juce
   license:            ISC
-  minimumCppStandard: 14
+  minimumCppStandard: 17
 
   dependencies:       juce_core
   OSXFrameworks:      Accelerate
@@ -79,15 +79,6 @@
   #undef JUCE_USE_ARM_NEON
  #endif
  #define JUCE_USE_ARM_NEON 0
-#endif
-
-/** Config: JUCE_PREFER_COMPILER_AUTOVECTORIZATION
- * This options makes juce::FloatVectorOperations and classes that use it under the hood use compiler
- * auto-vectorization instead of Apple vDSP or JUCE SIMD. As of mid 2020, at least with Clang and ARMv8,
- * they seem faster.
- */
-#ifndef JUCE_PREFER_COMPILER_AUTOVECTORIZATION
-#define JUCE_PREFER_COMPILER_AUTOVECTORIZATION 0
 #endif
 
 //==============================================================================

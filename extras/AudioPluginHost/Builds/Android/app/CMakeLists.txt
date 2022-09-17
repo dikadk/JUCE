@@ -1,7 +1,9 @@
-# Automatically generated makefile, created by the Projucer
+# Automatically generated CMakeLists, created by the Projucer
 # Don't edit this file! Your changes will be overwritten when you re-save the Projucer project!
 
 cmake_minimum_required(VERSION 3.4.1)
+
+project(juce_jni_project)
 
 set(BINARY_NAME "juce_jni")
 
@@ -1670,6 +1672,7 @@ add_library( ${BINARY_NAME}
     "../../../../../modules/juce_gui_basics/native/juce_mac_MainMenu.mm"
     "../../../../../modules/juce_gui_basics/native/juce_mac_MouseCursor.mm"
     "../../../../../modules/juce_gui_basics/native/juce_mac_NSViewComponentPeer.mm"
+    "../../../../../modules/juce_gui_basics/native/juce_mac_PerScreenDisplayLinks.h"
     "../../../../../modules/juce_gui_basics/native/juce_mac_Windowing.mm"
     "../../../../../modules/juce_gui_basics/native/juce_MultiTouchMapper.h"
     "../../../../../modules/juce_gui_basics/native/juce_ScopedDPIAwarenessDisabler.h"
@@ -3495,6 +3498,7 @@ set_source_files_properties(
     "../../../../../modules/juce_gui_basics/native/juce_mac_MainMenu.mm"
     "../../../../../modules/juce_gui_basics/native/juce_mac_MouseCursor.mm"
     "../../../../../modules/juce_gui_basics/native/juce_mac_NSViewComponentPeer.mm"
+    "../../../../../modules/juce_gui_basics/native/juce_mac_PerScreenDisplayLinks.h"
     "../../../../../modules/juce_gui_basics/native/juce_mac_Windowing.mm"
     "../../../../../modules/juce_gui_basics/native/juce_MultiTouchMapper.h"
     "../../../../../modules/juce_gui_basics/native/juce_ScopedDPIAwarenessDisabler.h"

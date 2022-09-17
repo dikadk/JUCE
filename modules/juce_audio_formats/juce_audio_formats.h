@@ -40,7 +40,7 @@
   description:        Classes for reading and writing various audio file formats.
   website:            http://www.juce.com/juce
   license:            GPL/Commercial
-  minimumCppStandard: 14
+  minimumCppStandard: 17
 
   dependencies:       juce_audio_basics
   OSXFrameworks:      CoreAudio CoreMIDI QuartzCore AudioToolbox
@@ -63,7 +63,7 @@
     reduce the size of your codebase and build time.
 */
 #ifndef JUCE_USE_FLAC
-#define JUCE_USE_FLAC 1
+ #define JUCE_USE_FLAC 1
 #endif
 
 /** Config: JUCE_USE_OGGVORBIS
@@ -72,7 +72,7 @@
     reduce the size of your codebase and build time.
 */
 #ifndef JUCE_USE_OGGVORBIS
-#define JUCE_USE_OGGVORBIS 1
+ #define JUCE_USE_OGGVORBIS 1
 #endif
 
 /** Config: JUCE_USE_MP3AUDIOFORMAT

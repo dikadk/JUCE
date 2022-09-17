@@ -1048,7 +1048,7 @@ public:
     struct XcodeTarget : build_tools::ProjectType::Target
     {
         //==============================================================================
-        XcodeTarget (build_tools::ProjectType::Target::Type targetType, const XcodeProjectExporter& exporter)
+        XcodeTarget (Type targetType, const XcodeProjectExporter& exporter)
             : Target (targetType),
               owner (exporter)
         {
@@ -1699,10 +1699,13 @@ public:
                 s.set ("CODE_SIGN_ENTITLEMENTS", getEntitlementsFilename().quoted());
 
             {
-                auto cppStandard = owner.project.getCppStandardString();
+                const auto cppStandard = [&]() -> String
+                {
+                    if (owner.project.getCppStandardString() == "latest")
+                        return owner.project.getLatestNumberedCppStandardString();
 
-                if (cppStandard == "latest")
-                    cppStandard = owner.project.getLatestNumberedCppStandardString();
+                    return owner.project.getCppStandardString();
+                }();
 
                 s.set ("CLANG_CXX_LANGUAGE_STANDARD", (String (owner.shouldUseGNUExtensions() ? "gnu++"
                                                                                               : "c++") + cppStandard).quoted());
@@ -1968,11 +1971,15 @@ public:
             StringArray paths (owner.extraSearchPaths);
             paths.addArray (config.getHeaderSearchPaths());
 
-            if (owner.project.getEnabledModules().isModuleEnabled ("juce_audio_plugin_client"))
+            constexpr auto audioPluginClient = "juce_audio_plugin_client";
+
+            if (owner.project.getEnabledModules().isModuleEnabled (audioPluginClient))
             {
-                // Needed to compile .r files
-                paths.add (owner.getModuleFolderRelativeToProject ("juce_audio_plugin_client")
-                                .rebased (owner.projectFolder, owner.getTargetFolder(), build_tools::RelativePath::buildTargetFolder)
+                paths.add (owner.getModuleFolderRelativeToProject (audioPluginClient)
+                                .getChildFile ("AU")
+                                .rebased (owner.projectFolder,
+                                          owner.getTargetFolder(),
+                                          build_tools::RelativePath::buildTargetFolder)
                                 .toUnixStyle());
             }
 
@@ -2299,7 +2306,16 @@ private:
 
             if (target->type == XcodeTarget::LV2PlugIn)
             {
-                auto script = "set -e\n\"$CONFIGURATION_BUILD_DIR/../"
+                // When building LV2 plugins on Arm macs, we need to load and run the plugin bundle
+                // during a post-build step in order to generate the plugin's supporting files. Arm
+                // macs will only load shared libraries if they are signed, but Xcode runs its
+                // signing step after any post-build scripts. As a workaround, we check whether the
+                // plugin is signed and generate an adhoc certificate if necessary, before running
+                // the manifest-generator.
+                auto script = "set -e\n"
+                              "xcrun codesign --verify \"$CONFIGURATION_BUILD_DIR/$PRODUCT_NAME\" "
+                              "|| xcrun codesign -s - \"$CONFIGURATION_BUILD_DIR/$PRODUCT_NAME\"\n"
+                              "\"$CONFIGURATION_BUILD_DIR/../"
                             + Project::getLV2FileWriterName()
                             + "\" \"$CONFIGURATION_BUILD_DIR/$PRODUCT_NAME\"\n";
 
