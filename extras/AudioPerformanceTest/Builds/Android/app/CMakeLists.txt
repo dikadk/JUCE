@@ -346,7 +346,6 @@ add_library( ${BINARY_NAME}
     "../../../../../modules/juce_audio_formats/codecs/flac/ordinals.h"
     "../../../../../modules/juce_audio_formats/codecs/flac/stream_decoder.h"
     "../../../../../modules/juce_audio_formats/codecs/flac/stream_encoder.h"
-    "../../../../../modules/juce_audio_formats/codecs/flac/win_utf8_io.h"
     "../../../../../modules/juce_audio_formats/codecs/oggvorbis/libvorbis-1.3.7/lib/books/coupled/res_books_51.h"
     "../../../../../modules/juce_audio_formats/codecs/oggvorbis/libvorbis-1.3.7/lib/books/coupled/res_books_stereo.h"
     "../../../../../modules/juce_audio_formats/codecs/oggvorbis/libvorbis-1.3.7/lib/books/floor/floor_books.h"
@@ -924,6 +923,7 @@ add_library( ${BINARY_NAME}
     "../../../../../modules/juce_core/native/juce_mac_Strings.mm"
     "../../../../../modules/juce_core/native/juce_mac_SystemStats.mm"
     "../../../../../modules/juce_core/native/juce_mac_Threads.mm"
+    "../../../../../modules/juce_core/native/juce_native_ThreadPriorities.h"
     "../../../../../modules/juce_core/native/juce_posix_IPAddress.h"
     "../../../../../modules/juce_core/native/juce_posix_NamedPipe.cpp"
     "../../../../../modules/juce_core/native/juce_posix_SharedCode.h"
@@ -1625,6 +1625,8 @@ add_library( ${BINARY_NAME}
     "../../../../../modules/juce_gui_basics/windows/juce_TooltipWindow.h"
     "../../../../../modules/juce_gui_basics/windows/juce_TopLevelWindow.cpp"
     "../../../../../modules/juce_gui_basics/windows/juce_TopLevelWindow.h"
+    "../../../../../modules/juce_gui_basics/windows/juce_VBlankAttachement.cpp"
+    "../../../../../modules/juce_gui_basics/windows/juce_VBlankAttachement.h"
     "../../../../../modules/juce_gui_basics/juce_gui_basics.cpp"
     "../../../../../modules/juce_gui_basics/juce_gui_basics.mm"
     "../../../../../modules/juce_gui_basics/juce_gui_basics.h"
@@ -2017,7 +2019,6 @@ set_source_files_properties(
     "../../../../../modules/juce_audio_formats/codecs/flac/ordinals.h"
     "../../../../../modules/juce_audio_formats/codecs/flac/stream_decoder.h"
     "../../../../../modules/juce_audio_formats/codecs/flac/stream_encoder.h"
-    "../../../../../modules/juce_audio_formats/codecs/flac/win_utf8_io.h"
     "../../../../../modules/juce_audio_formats/codecs/oggvorbis/libvorbis-1.3.7/lib/books/coupled/res_books_51.h"
     "../../../../../modules/juce_audio_formats/codecs/oggvorbis/libvorbis-1.3.7/lib/books/coupled/res_books_stereo.h"
     "../../../../../modules/juce_audio_formats/codecs/oggvorbis/libvorbis-1.3.7/lib/books/floor/floor_books.h"
@@ -2595,6 +2596,7 @@ set_source_files_properties(
     "../../../../../modules/juce_core/native/juce_mac_Strings.mm"
     "../../../../../modules/juce_core/native/juce_mac_SystemStats.mm"
     "../../../../../modules/juce_core/native/juce_mac_Threads.mm"
+    "../../../../../modules/juce_core/native/juce_native_ThreadPriorities.h"
     "../../../../../modules/juce_core/native/juce_posix_IPAddress.h"
     "../../../../../modules/juce_core/native/juce_posix_NamedPipe.cpp"
     "../../../../../modules/juce_core/native/juce_posix_SharedCode.h"
@@ -3296,6 +3298,8 @@ set_source_files_properties(
     "../../../../../modules/juce_gui_basics/windows/juce_TooltipWindow.h"
     "../../../../../modules/juce_gui_basics/windows/juce_TopLevelWindow.cpp"
     "../../../../../modules/juce_gui_basics/windows/juce_TopLevelWindow.h"
+    "../../../../../modules/juce_gui_basics/windows/juce_VBlankAttachement.cpp"
+    "../../../../../modules/juce_gui_basics/windows/juce_VBlankAttachement.h"
     "../../../../../modules/juce_gui_basics/juce_gui_basics.cpp"
     "../../../../../modules/juce_gui_basics/juce_gui_basics.mm"
     "../../../../../modules/juce_gui_basics/juce_gui_basics.h"
@@ -3365,14 +3369,12 @@ set_source_files_properties(
     "../../../JuceLibraryCode/JuceHeader.h"
     PROPERTIES HEADER_FILE_ONLY TRUE)
 
-target_compile_options( ${BINARY_NAME} PRIVATE "-fsigned-char" [[-mfpu=neon]] [[-mfloat-abi=hard]] [[-ffast-math]] [[-funroll-loops]] [[--param]] [[max-unroll-times=8]] [[-mhard-float]] [[-D_NDK_MATH_NO_SOFTFP=1]] [[-DJUCE_DISABLE_ASSERTIONS=1]] )
-
 if( JUCE_BUILD_CONFIGURATION MATCHES "DEBUG" )
-    target_compile_options( ${BINARY_NAME} PRIVATE)
+    target_compile_options( ${BINARY_NAME} PRIVATE "-fsigned-char" [[-mfpu=neon]] [[-mfloat-abi=hard]] [[-ffast-math]] [[-funroll-loops]] [[--param]] [[max-unroll-times=8]] [[-mhard-float]] [[-D_NDK_MATH_NO_SOFTFP=1]] [[-DJUCE_DISABLE_ASSERTIONS=1]] )
 endif()
 
 if( JUCE_BUILD_CONFIGURATION MATCHES "RELEASE" )
-    target_compile_options( ${BINARY_NAME} PRIVATE)
+    target_compile_options( ${BINARY_NAME} PRIVATE "-fsigned-char" [[-mfpu=neon]] [[-mfloat-abi=hard]] [[-ffast-math]] [[-funroll-loops]] [[--param]] [[max-unroll-times=8]] [[-mhard-float]] [[-D_NDK_MATH_NO_SOFTFP=1]] [[-DJUCE_DISABLE_ASSERTIONS=1]] )
 endif()
 
 find_library(log "log")

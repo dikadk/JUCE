@@ -135,9 +135,10 @@ SystemStats::OperatingSystemType SystemStats::getOperatingSystemType()
 
         case 11: return MacOS_11;
         case 12: return MacOS_12;
+        case 13: return MacOS_13;
     }
 
-    return UnknownOS;
+    return MacOSX;
    #endif
 }
 

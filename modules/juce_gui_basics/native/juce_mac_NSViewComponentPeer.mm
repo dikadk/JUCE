@@ -178,6 +178,7 @@ public:
                                                        styleMask: getNSWindowStyleMask (windowStyleFlags)
                                                          backing: NSBackingStoreBuffered
                                                            defer: YES];
+            [window setColorSpace: [NSColorSpace sRGBColorSpace]];
             setOwner (window, this);
 
             if (@available (macOS 10.10, *))
@@ -1023,6 +1024,12 @@ public:
         return areAnyWindowsInLiveResize();
     }
 
+    void onVBlank()
+    {
+        vBlankListeners.call ([] (auto& l) { l.onVBlank(); });
+        setNeedsDisplayRectangles();
+    }
+
     void setNeedsDisplayRectangles()
     {
         if (deferredRepaints.isEmpty())
@@ -1317,9 +1324,9 @@ public:
         if (auto keyCode = getKeyCodeFromEvent (ev))
         {
             if (isKeyDown)
-                keysCurrentlyDown.addIfNotAlreadyThere (keyCode);
+                keysCurrentlyDown.insert (keyCode);
             else
-                keysCurrentlyDown.removeFirstMatchingValue (keyCode);
+                keysCurrentlyDown.erase (keyCode);
         }
     }
 
@@ -1583,7 +1590,7 @@ public:
    #else
     bool usingCoreGraphics = false;
    #endif
-    bool isZooming = false, isFirstLiveResize = false, textWasInserted = false;
+    bool textWasInserted = false, isFirstLiveResize = false;
     bool isStretchingTop = false, isStretchingLeft = false, isStretchingBottom = false, isStretchingRight = false;
     bool windowRepresentsFile = false;
     bool isAlwaysOnTop = false, wasAlwaysOnTop = false;
@@ -1594,7 +1601,7 @@ public:
     uint32 lastRepaintTime;
 
     static ComponentPeer* currentlyFocusedPeer;
-    static Array<int> keysCurrentlyDown;
+    static std::set<int> keysCurrentlyDown;
     static int insideToFrontCall;
 
     static const SEL dismissModalsSelector;
@@ -1611,25 +1618,56 @@ private:
     // avoid unnecessarily duplicating display-link threads.
     SharedResourcePointer<PerScreenDisplayLinks> sharedDisplayLinks;
 
+    class AsyncRepainter : private AsyncUpdater
+    {
+    public:
+        explicit AsyncRepainter (NSViewComponentPeer& o) : owner (o) {}
+        ~AsyncRepainter() override { cancelPendingUpdate(); }
+
+        void markUpdated (const CGDirectDisplayID x)
+        {
+            {
+                const std::scoped_lock lock { mutex };
+
+                if (std::find (backgroundDisplays.cbegin(), backgroundDisplays.cend(), x) == backgroundDisplays.cend())
+                    backgroundDisplays.push_back (x);
+            }
+
+            triggerAsyncUpdate();
+        }
+
+    private:
+        void handleAsyncUpdate() override
+        {
+            {
+                const std::scoped_lock lock { mutex };
+                mainThreadDisplays = backgroundDisplays;
+                backgroundDisplays.clear();
+            }
+
+            for (const auto& display : mainThreadDisplays)
+                if (auto* peerView = owner.view)
+                    if (auto* peerWindow = [peerView window])
+                        if (display == ScopedDisplayLink::getDisplayIdForScreen ([peerWindow screen]))
+                            owner.onVBlank();
+        }
+
+        NSViewComponentPeer& owner;
+        std::mutex mutex;
+        std::vector<CGDirectDisplayID> backgroundDisplays, mainThreadDisplays;
+    };
+
+    AsyncRepainter asyncRepainter { *this };
+
     /*  Creates a function object that can be called from an arbitrary thread (probably a CVLink
         thread). When called, this function object will trigger a call to setNeedsDisplayRectangles
         as soon as possible on the main thread, for any peers currently on the provided NSScreen.
     */
     PerScreenDisplayLinks::Connection connection
     {
-        sharedDisplayLinks->registerFactory ([this] (auto* screen)
+        sharedDisplayLinks->registerFactory ([this] (CGDirectDisplayID display)
         {
-            return [peerRef = WeakReference<NSViewComponentPeer> { this }, screen]
-            {
-                MessageManager::callAsync ([peerRef, screen]
-                {
-                    if (auto* peer = peerRef.get())
-                        if (auto* peerView = peer->view)
-                            if (auto* peerWindow = [peerView window])
-                                if (screen == [peerWindow screen])
-                                    peer->setNeedsDisplayRectangles();
-                });
-            };
+            return [this, display] { asyncRepainter.markUpdated (display); };
         })
     };
 
@@ -1969,15 +2007,14 @@ struct JuceNSViewClass   : public NSViewComponentPeerWrapper<ObjCClass<NSView>>
         {
             if (auto* owner = getOwner (self))
             {
-                auto* target = owner->findCurrentTextInputTarget();
                 owner->textWasInserted = false;
 
-                if (target != nullptr)
+                if (auto* target = owner->findCurrentTextInputTarget())
                     [(NSView*) self interpretKeyEvents: [NSArray arrayWithObject: ev]];
                 else
                     owner->stringBeingComposed.clear();
 
-                if (! (owner->textWasInserted || owner->redirectKeyDown (ev)))
+                if (! (owner->textWasInserted || owner->stringBeingComposed.isNotEmpty() || owner->redirectKeyDown (ev)))
                     sendSuperclassMessage<void> (self, @selector (keyDown:), ev);
             }
         });
@@ -2329,7 +2366,7 @@ struct JuceNSWindowClass   : public NSViewComponentPeerWrapper<ObjCClass<NSWindo
         {
             auto* owner = getOwner (self);
 
-            if (owner == nullptr || owner->isZooming)
+            if (owner == nullptr)
                 return proposedFrameSize;
 
             NSRect frameRect = flippedScreenRect ([(NSWindow*) self frame]);
@@ -2518,20 +2555,25 @@ NSWindow* NSViewComponentPeer::createWindowInstance()
 
 //==============================================================================
 ComponentPeer* NSViewComponentPeer::currentlyFocusedPeer = nullptr;
-Array<int> NSViewComponentPeer::keysCurrentlyDown;
+std::set<int> NSViewComponentPeer::keysCurrentlyDown;
 
 //==============================================================================
 bool KeyPress::isKeyCurrentlyDown (int keyCode)
 {
-    if (NSViewComponentPeer::keysCurrentlyDown.contains (keyCode))
+    const auto isDown = [] (int k)
+    {
+        return NSViewComponentPeer::keysCurrentlyDown.find (k) != NSViewComponentPeer::keysCurrentlyDown.cend();
+    };
+
+    if (isDown (keyCode))
         return true;
 
     if (keyCode >= 'A' && keyCode <= 'Z'
-         && NSViewComponentPeer::keysCurrentlyDown.contains ((int) CharacterFunctions::toLowerCase ((juce_wchar) keyCode)))
+         && isDown ((int) CharacterFunctions::toLowerCase ((juce_wchar) keyCode)))
         return true;
 
     if (keyCode >= 'a' && keyCode <= 'z'
-         && NSViewComponentPeer::keysCurrentlyDown.contains ((int) CharacterFunctions::toUpperCase ((juce_wchar) keyCode)))
+         && isDown ((int) CharacterFunctions::toUpperCase ((juce_wchar) keyCode)))
         return true;
 
     return false;

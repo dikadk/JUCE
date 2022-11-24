@@ -944,9 +944,10 @@ struct WorkSubmitter
     CriticalSection* workMutex;
 };
 
-template <typename Trivial, std::enable_if_t<std::is_trivial<Trivial>::value, int> = 0>
+template <typename Trivial>
 static auto toChars (Trivial value)
 {
+    static_assert (std::is_trivial_v<Trivial>);
     std::array<char, sizeof (Trivial)> result;
     writeUnaligned (result.data(), value);
     return result;
@@ -956,7 +957,7 @@ template <typename Context>
 class WorkQueue
 {
 public:
-    static_assert (std::is_trivial<Context>::value, "Context must be copyable as bytes");
+    static_assert (std::is_trivial_v<Context>, "Context must be copyable as bytes");
 
     explicit WorkQueue (int size)
         : fifo (size), data (static_cast<size_t> (size)) {}
@@ -1840,7 +1841,12 @@ class World
 public:
     World() : world (lilv_world_new()) {}
 
-    void loadAll() { lilv_world_load_all (world.get()); }
+    void loadAllFromPaths (const NodeString& paths)
+    {
+        lilv_world_set_option (world.get(), LILV_OPTION_LV2_PATH, paths.get());
+        lilv_world_load_all (world.get());
+    }
+
     void loadBundle   (const NodeUri& uri)      { lilv_world_load_bundle   (world.get(), uri.get()); }
     void unloadBundle (const NodeUri& uri)      { lilv_world_unload_bundle (world.get(), uri.get()); }
 
@@ -3657,8 +3663,8 @@ private:
 
     union Data
     {
-        static_assert (std::is_trivial<PortBacking>::value,  "PortBacking must be trivial");
-        static_assert (std::is_trivial<PatchBacking>::value, "PatchBacking must be trivial");
+        static_assert (std::is_trivial_v<PortBacking>,  "PortBacking must be trivial");
+        static_assert (std::is_trivial_v<PatchBacking>, "PatchBacking must be trivial");
 
         explicit Data (PortBacking p)  : port  (p) {}
         explicit Data (PatchBacking p) : patch (p) {}
@@ -5188,7 +5194,7 @@ class LV2PluginFormat::Pimpl
 public:
     Pimpl()
     {
-        world->loadAll();
+        loadAllPluginsFromPaths (getDefaultLocationsToSearch());
 
         const auto tempFile = lv2ResourceFolder.getFile();
 
@@ -5251,9 +5257,9 @@ public:
         return findPluginByUri (description.fileOrIdentifier) != nullptr;
     }
 
-    StringArray searchPathsForPlugins (const FileSearchPath&, bool, bool)
+    StringArray searchPathsForPlugins (const FileSearchPath& paths, bool, bool)
     {
-        world->loadAll();
+        loadAllPluginsFromPaths (paths);
 
         StringArray result;
 
@@ -5263,7 +5269,30 @@ public:
         return result;
     }
 
-    FileSearchPath getDefaultLocationsToSearch() { return {}; }
+    FileSearchPath getDefaultLocationsToSearch()
+    {
+      #if JUCE_MAC
+        return { "~/Library/Audio/Plug-Ins/LV2;"
+                 "~/.lv2;"
+                 "/usr/local/lib/lv2;"
+                 "/usr/lib/lv2;"
+                 "/Library/Audio/Plug-Ins/LV2;" };
+      #elif JUCE_WINDOWS
+        return { "%APPDATA%\\LV2;"
+                 "%COMMONPROGRAMFILES%\\LV2" };
+      #else
+       #if JUCE_64BIT
+        if (File ("/usr/lib64/lv2").exists() || File ("/usr/local/lib64/lv2").exists())
+            return { "~/.lv2;"
+                     "/usr/lib64/lv2;"
+                     "/usr/local/lib64/lv2" };
+       #endif
+
+        return { "~/.lv2;"
+                 "/usr/lib/lv2;"
+                 "/usr/local/lib/lv2" };
+      #endif
+    }
 
     const LilvUI* findEmbeddableUi (const lv2_host::Uis* pluginUis, std::true_type)
     {
@@ -5456,6 +5485,12 @@ public:
     }
 
 private:
+    void loadAllPluginsFromPaths (const FileSearchPath& path)
+    {
+        const auto joined = path.toStringWithSeparator (LILV_PATH_SEP);
+        world->loadAllFromPaths (world->newString (joined.toRawUTF8()));
+    }
+
     struct Free { void operator() (char* ptr) const noexcept { free (ptr); } };
     using StringPtr = std::unique_ptr<char, Free>;
 

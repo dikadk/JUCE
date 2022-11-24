@@ -1387,7 +1387,7 @@ public:
         shouldShutdown = false;
         deviceSampleRateChanged = false;
 
-        startThread (8);
+        startThread (Priority::high);
         Thread::sleep (5);
 
         if (inputDevice != nullptr && inputDevice->client != nullptr)
@@ -1552,7 +1552,7 @@ public:
                 const ScopedTryLock sl (startStopLock);
 
                 if (sl.isLocked() && isStarted)
-                    callback->audioDeviceIOCallbackWithContext (const_cast<const float**> (inputBuffers),
+                    callback->audioDeviceIOCallbackWithContext (inputBuffers,
                                                                 numInputBuffers,
                                                                 outputBuffers,
                                                                 numOutputBuffers,
@@ -1566,7 +1566,7 @@ public:
             {
                 // Note that this function is handed the input device so it can check for the event and make sure
                 // the input reservoir is filled up correctly even when bufferSize > device actualBufferSize
-                outputDevice->copyBuffers (const_cast<const float**> (outputBuffers), numOutputBuffers, bufferSize, inputDevice.get(), *this);
+                outputDevice->copyBuffers (outputBuffers, numOutputBuffers, bufferSize, inputDevice.get(), *this);
 
                 if (outputDevice->sampleRateHasChanged)
                 {

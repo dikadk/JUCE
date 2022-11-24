@@ -689,7 +689,7 @@ public:
                        "added separated by a semicolon. The App Groups Capability setting must be enabled for this setting to have any effect.");
 
         props.add (new ChoicePropertyComponent (keepCustomXcodeSchemesValue, "Keep Custom Xcode Schemes"),
-                   "Enable this to keep any Xcode schemes you have created for debugging or running, e.g. to launch a plug-in in"
+                   "Enable this to keep any Xcode schemes you have created for debugging or running, e.g. to launch a plug-in in "
                    "various hosts. If disabled, all schemes are replaced by a default set.");
 
         props.add (new ChoicePropertyComponent (useHeaderMapValue, "USE_HEADERMAP"),
@@ -807,10 +807,10 @@ protected:
             : BuildConfiguration (p, t, e),
               iOS (isIOS),
               macOSBaseSDK                 (config, Ids::macOSBaseSDK,                 getUndoManager()),
-              macOSDeploymentTarget        (config, Ids::macOSDeploymentTarget,        getUndoManager(), "10.11"),
+              macOSDeploymentTarget        (config, Ids::macOSDeploymentTarget,        getUndoManager(), "10.13"),
               macOSArchitecture            (config, Ids::osxArchitecture,              getUndoManager(), macOSArch_Default),
               iosBaseSDK                   (config, Ids::iosBaseSDK,                   getUndoManager()),
-              iosDeploymentTarget          (config, Ids::iosDeploymentTarget,          getUndoManager(), "9.3"),
+              iosDeploymentTarget          (config, Ids::iosDeploymentTarget,          getUndoManager(), "11.0"),
               customXcodeFlags             (config, Ids::customXcodeFlags,             getUndoManager()),
               plistPreprocessorDefinitions (config, Ids::plistPreprocessorDefinitions, getUndoManager()),
               codeSignIdentity             (config, Ids::codeSigningIdentity,          getUndoManager()),
@@ -859,7 +859,7 @@ protected:
                            "The version of the macOS SDK to link against." + sdkInfoString + "10.11.");
 
                 props.add (new TextPropertyComponent (macOSDeploymentTarget, "macOS Deployment Target", 8, false),
-                           "The minimum version of macOS to target." + sdkInfoString + "10.7.");
+                           "The minimum version of macOS to target." + sdkInfoString + "10.9.");
 
                 props.add (new ChoicePropertyComponent (macOSArchitecture, "macOS Architecture",
                                                         { "Native architecture of build machine", "Standard 32-bit",        "Standard 32/64-bit",     "Standard 64-bit" },
@@ -1614,9 +1614,10 @@ public:
             for (const auto& xcodeFlags : { XcodeWarningFlags { recommendedWarnings.common, "OTHER_CFLAGS" },
                                             XcodeWarningFlags { recommendedWarnings.cpp,    "OTHER_CPLUSPLUSFLAGS" } })
             {
-                auto flags = (xcodeFlags.flags.joinIntoString (" ")
-                                 + " " + owner.getExtraCompilerFlagsString()).trim();
-                flags = owner.replacePreprocessorTokens (config, flags);
+                const auto flags = owner.replacePreprocessorTokens (config,
+                                                                    (xcodeFlags.flags.joinIntoString (" ")
+                                                                     + " "
+                                                                     + config.getAllCompilerFlagsString()).trim());
 
                 if (flags.isNotEmpty())
                     s.set (xcodeFlags.variable, flags.quoted());
@@ -1680,11 +1681,9 @@ public:
             s.set ("GCC_VERSION", gccVersion);
             s.set ("CLANG_LINK_OBJC_RUNTIME", "NO");
 
-            auto codeSigningIdentity = owner.getCodeSigningIdentity (config);
-            s.set (owner.iOS ? "\"CODE_SIGN_IDENTITY[sdk=iphoneos*]\"" : "CODE_SIGN_IDENTITY",
-                   codeSigningIdentity.quoted());
+            owner.addCodeSigningIdentity (config, s);
 
-            if (codeSigningIdentity.isNotEmpty())
+            if (owner.getCodeSigningIdentity (config).isNotEmpty())
             {
                 s.set ("PROVISIONING_PROFILE_SPECIFIER", "\"\"");
 
@@ -1854,7 +1853,7 @@ public:
                     flags.add (getLinkerFlagForLib (l));
             }
 
-            flags.add (owner.replacePreprocessorTokens (config, owner.getExtraLinkerFlagsString()));
+            flags.add (owner.replacePreprocessorTokens (config, config.getAllLinkerFlagsString()));
             flags = getCleanedStringArray (flags);
         }
 
@@ -2532,6 +2531,13 @@ private:
         return config.getCodeSignIdentityString();
     }
 
+    void addCodeSigningIdentity (const XcodeBuildConfiguration& config, StringPairArray& result) const
+    {
+        if (const auto codeSigningIdentity = getCodeSigningIdentity (config); codeSigningIdentity.isNotEmpty())
+            result.set (iOS ? "\"CODE_SIGN_IDENTITY[sdk=iphoneos*]\"" : "CODE_SIGN_IDENTITY",
+                        codeSigningIdentity.quoted());
+    }
+
     StringPairArray getProjectSettings (const XcodeBuildConfiguration& config) const
     {
         StringPairArray s;
@@ -2582,8 +2588,7 @@ private:
                 s.set ("ONLY_ACTIVE_ARCH", "YES");
         }
 
-        s.set (iOS ? "\"CODE_SIGN_IDENTITY[sdk=iphoneos*]\"" : "CODE_SIGN_IDENTITY",
-               getCodeSigningIdentity (config).quoted());
+        addCodeSigningIdentity (config, s);
 
         if (iOS)
         {
@@ -3212,7 +3217,7 @@ private:
                 xcodeTarget = getTargetOfType (project.getTargetTypeFromFilePath (projectItem.getFile(), false));
 
             return addFile (FileOptions().withRelativePath (path)
-                                         .withCompilerFlags (compilerFlagSchemesMap[projectItem.getCompilerFlagSchemeString()].get())
+                                         .withCompilerFlags (getCompilerFlagsForProjectItem (projectItem))
                                          .withCompilationEnabled (projectItem.shouldBeCompiled())
                                          .withAddToBinaryResourcesEnabled (projectItem.shouldBeAddedToBinaryResources())
                                          .withAddToXcodeResourcesEnabled (projectItem.shouldBeAddedToXcodeResources())
