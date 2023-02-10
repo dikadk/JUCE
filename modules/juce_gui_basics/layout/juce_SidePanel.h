@@ -195,8 +195,8 @@ public:
     void mouseDrag (const MouseEvent&) override;
     /** @internal */
     void mouseUp (const MouseEvent&) override;
-
-    int panelWidth = 0;
+    /** @internal */
+    std::unique_ptr<AccessibilityHandler> createAccessibilityHandler() override;
 
 private:
     //==============================================================================
@@ -212,6 +212,7 @@ private:
     bool isOnLeft = false;
     bool isShowing = false;
 
+    int panelWidth = 0;
     int shadowWidth = 15;
     int titleBarHeight = 40;
 
@@ -222,7 +223,6 @@ private:
     bool shouldShowDismissButton = true;
 
     //==============================================================================
-    std::unique_ptr<AccessibilityHandler> createAccessibilityHandler() override;
     void lookAndFeelChanged() override;
     void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
     void changeListenerCallback (ChangeBroadcaster*) override;
