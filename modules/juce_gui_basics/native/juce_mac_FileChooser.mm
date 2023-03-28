@@ -179,7 +179,7 @@ public:
     {
         if (panel != nil)
         {
-            setAlwaysOnTop (juce_areThereAnyAlwaysOnTopWindows());
+            setAlwaysOnTop (detail::WindowingHelpers::areThereAnyAlwaysOnTopWindows());
             addToDesktop (0);
 
             enterModalState (true);
@@ -189,7 +189,11 @@ public:
                 if (ref == nullptr)
                     return;
 
-                [ref->panel beginWithCompletionHandler: CreateObjCBlock (ref.getComponent(), &Native::finished)];
+                [ref->panel beginWithCompletionHandler: ^(NSInteger result)
+                                                        {
+                                                            if (auto* ptr = ref.getComponent())
+                                                                ptr->finished (result);
+                                                        }];
 
                 if (ref->preview != nullptr)
                     ref->preview->toFront (true);
@@ -411,4 +415,4 @@ bool FileChooser::isPlatformDialogAvailable()
    #endif
 }
 
-}
+} // namespace juce

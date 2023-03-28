@@ -23,23 +23,20 @@
   ==============================================================================
 */
 
-#include <juce_core/system/juce_TargetPlatform.h>
-#include "../utility/juce_CheckSettingMacros.h"
+package com.rmsl.juce;
 
-#if JucePlugin_Enable_ARA
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 
-#include "../utility/juce_IncludeSystemHeaders.h"
-#include "../utility/juce_IncludeModuleHeaders.h"
+//==============================================================================
+public class Receiver extends BroadcastReceiver
+{
+    @Override
+    public void onReceive (Context context, Intent intent)
+    {
+        onBroadcastResultNative (intent.getIntExtra ("com.rmsl.juce.JUCE_REQUEST_CODE", 0));
+    }
 
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wunused-parameter", "-Wgnu-zero-variadic-macro-arguments", "-Wmissing-prototypes")
-JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4100)
-
-#include <ARA_Library/PlugIn/ARAPlug.cpp>
-#include <ARA_Library/Dispatch/ARAPlugInDispatch.cpp>
-#include <ARA_Library/Utilities/ARAPitchInterpretation.cpp>
-#include <ARA_Library/Utilities/ARAChannelArrangement.cpp>
-
-JUCE_END_IGNORE_WARNINGS_MSVC
-JUCE_END_IGNORE_WARNINGS_GCC_LIKE
-
-#endif
+    private native void onBroadcastResultNative (int requestCode);
+}

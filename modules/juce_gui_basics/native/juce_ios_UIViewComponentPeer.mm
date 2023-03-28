@@ -446,14 +446,27 @@ public:
                                                stringBeingComposed.length());
     }
 
-    void replaceMarkedRangeWithText (TextInputTarget* target, const String& text)
+    enum class UnderlineRegion
+    {
+        none,
+        underCompositionRange
+    };
+
+    void replaceMarkedRangeWithText (TextInputTarget* target,
+                                     const String& text,
+                                     UnderlineRegion underline)
     {
         if (stringBeingComposed.isNotEmpty())
             target->setHighlightedRegion (getMarkedTextRange());
 
         target->insertTextAtCaret (text);
-        target->setTemporaryUnderlining ({ Range<int>::withStartAndLength (startOfMarkedTextInTextInputTarget,
-                                                                           text.length()) });
+
+        const auto underlineRanges = underline == UnderlineRegion::underCompositionRange
+                                   ? Array { Range<int>::withStartAndLength (startOfMarkedTextInTextInputTarget,
+                                                                             text.length()) }
+                                   : Array<Range<int>>{};
+        target->setTemporaryUnderlining (underlineRanges);
+
         stringBeingComposed = text;
     }
 
@@ -1167,6 +1180,8 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
         // a KeyPress and trust the current TextInputTarget to process it correctly.
         const auto redirectKeyPresses = [&] (juce_wchar codepoint)
         {
+            target->setTemporaryUnderlining ({});
+
             // Simulate a key down
             const auto code = getKeyCodeForCharacters (String::charToString (codepoint));
             iOSGlobals::keysCurrentlyDown.setDown (code, true);
@@ -1179,14 +1194,14 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
             owner->handleKeyUpOrDown (false);
         };
 
+        using UR = UIViewComponentPeer::UnderlineRegion;
+
         if ([text isEqual: @"\n"] || [text isEqual: @"\r"])
             redirectKeyPresses ('\r');
         else if ([text isEqual: @"\t"])
             redirectKeyPresses ('\t');
         else
-            owner->replaceMarkedRangeWithText (target, nsStringToJuce (text));
-
-        target->setTemporaryUnderlining ({});
+            owner->replaceMarkedRangeWithText (target, nsStringToJuce (text), UR::none);
     }
 
     owner->stringBeingComposed.clear();
@@ -1251,7 +1266,8 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
     if (owner->stringBeingComposed.isEmpty())
         owner->startOfMarkedTextInTextInputTarget = target->getHighlightedRegion().getStart();
 
-    owner->replaceMarkedRangeWithText (target, newMarkedText);
+    using UR = UIViewComponentPeer::UnderlineRegion;
+    owner->replaceMarkedRangeWithText (target, newMarkedText, UR::underCompositionRange);
 
     const auto newSelection = nsRangeToJuce (selectedRange) + owner->startOfMarkedTextInTextInputTarget;
     target->setHighlightedRegion (newSelection);
@@ -1267,8 +1283,8 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
     if (target == nullptr)
         return;
 
-    owner->replaceMarkedRangeWithText (target, owner->stringBeingComposed);
-    target->setTemporaryUnderlining ({});
+    using UR = UIViewComponentPeer::UnderlineRegion;
+    owner->replaceMarkedRangeWithText (target, owner->stringBeingComposed, UR::none);
     owner->stringBeingComposed.clear();
     owner->startOfMarkedTextInTextInputTarget = 0;
 }
@@ -1317,7 +1333,7 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
         if (auto* comp = dynamic_cast<Component*> (target))
         {
             const auto areaOnDesktop = comp->localAreaToGlobal (target->getCaretRectangle());
-            return convertToCGRect (ScalingHelpers::scaledScreenPosToUnscaled (areaOnDesktop));
+            return convertToCGRect (detail::ScalingHelpers::scaledScreenPosToUnscaled (areaOnDesktop));
         }
     }
 
@@ -1337,7 +1353,7 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
     {
         if (auto* comp = dynamic_cast<Component*> (target))
         {
-            const auto pointOnDesktop = ScalingHelpers::unscaledScreenPosToScaled (convertToPointFloat (point));
+            const auto pointOnDesktop = detail::ScalingHelpers::unscaledScreenPosToScaled (convertToPointFloat (point));
             return target->getCharIndexForPoint (comp->getLocalPoint (nullptr, pointOnDesktop).roundToInt());
         }
     }
@@ -1464,7 +1480,7 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
             if (! list.isEmpty())
             {
                 const auto areaOnDesktop = comp->localAreaToGlobal (list.getRectangle (0));
-                return convertToCGRect (ScalingHelpers::scaledScreenPosToUnscaled (areaOnDesktop));
+                return convertToCGRect (detail::ScalingHelpers::scaledScreenPosToUnscaled (areaOnDesktop));
             }
         }
     }
@@ -1485,7 +1501,7 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
             for (const auto& rect : list)
             {
                 const auto areaOnDesktop = comp->localAreaToGlobal (rect);
-                const auto nativeArea = convertToCGRect (ScalingHelpers::scaledScreenPosToUnscaled (areaOnDesktop));
+                const auto nativeArea = convertToCGRect (detail::ScalingHelpers::scaledScreenPosToUnscaled (areaOnDesktop));
 
                 [result addObject: [JuceUITextSelectionRect withRect: nativeArea]];
             }
@@ -1812,7 +1828,7 @@ void UIViewComponentPeer::setFullScreen (bool shouldBeFullScreen)
 
         // (can't call the component's setBounds method because that'll reset our fullscreen flag)
         if (! r.isEmpty())
-            setBounds (ScalingHelpers::scaledScreenPosToUnscaled (component, r), shouldBeFullScreen);
+            setBounds (detail::ScalingHelpers::scaledScreenPosToUnscaled (component, r), shouldBeFullScreen);
 
         component.repaint();
     }
@@ -1855,7 +1871,7 @@ void UIViewComponentPeer::updateScreenBounds()
 
 bool UIViewComponentPeer::contains (Point<int> localPos, bool trueIfInAChildWindow) const
 {
-    if (! ScalingHelpers::scaledScreenPosToUnscaled (component, component.getLocalBounds()).contains (localPos))
+    if (! detail::ScalingHelpers::scaledScreenPosToUnscaled (component, component.getLocalBounds()).contains (localPos))
         return false;
 
     UIView* v = [view hitTest: convertToCGPoint (localPos)
@@ -2192,8 +2208,14 @@ void Desktop::allowedOrientationsChanged()
         {
             if ([scene isKindOfClass: [UIWindowScene class]])
             {
-                [static_cast<UIWindowScene*> (scene) requestGeometryUpdateWithPreferences: preferences.get()
-                                                                             errorHandler: ^([[maybe_unused]] NSError* error)
+                auto* windowScene = static_cast<UIWindowScene*> (scene);
+
+                for (UIWindow* window in [windowScene windows])
+                    if (auto* vc = [window rootViewController])
+                        [vc setNeedsUpdateOfSupportedInterfaceOrientations];
+
+                [windowScene requestGeometryUpdateWithPreferences: preferences.get()
+                                                     errorHandler: ^([[maybe_unused]] NSError* error)
                  {
                     // Failed to set the new set of supported orientations.
                     // You may have hit this assertion because you're trying to restrict the supported orientations

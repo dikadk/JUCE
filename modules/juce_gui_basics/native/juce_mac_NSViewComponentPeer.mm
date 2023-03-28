@@ -341,10 +341,7 @@ public:
         }
 
         if (oldViewSize.width != r.size.width || oldViewSize.height != r.size.height)
-        {
-            numFramesToSkipMetalRenderer = 5;
             [view setNeedsDisplay: true];
-        }
     }
 
     Rectangle<int> getBounds (const bool global) const
@@ -1013,6 +1010,8 @@ public:
         // As a work around for this, we use a RectangleList to do our own coalescing of regions before
         // asynchronously asking the OS to repaint them.
         deferredRepaints.add (area.toFloat());
+        const auto frameSize = view.frame.size;
+        boundsWhenRepaintsDeferred = { (float) frameSize.width, (float) frameSize.height };
     }
 
     static bool shouldThrottleRepaint()
@@ -1043,43 +1042,31 @@ public:
         if (msSinceLastRepaint < minimumRepaintInterval && shouldThrottleRepaint())
             return;
 
-        if (metalRenderer != nullptr)
+        const auto frameSize = view.frame.size;
+        const Rectangle currentBounds { (float) frameSize.width, (float) frameSize.height };
+
+        if (boundsWhenRepaintsDeferred != currentBounds)
         {
-            auto setDeferredRepaintsToWholeFrame = [this]
-            {
-                const auto frameSize = view.frame.size;
-                deferredRepaints = Rectangle<float> { (float) frameSize.width, (float) frameSize.height };
-            };
+            deferredRepaints = currentBounds;
 
-            // If we are resizing we need to fall back to synchronous drawing to avoid artefacts
-            if ([window inLiveResize] || numFramesToSkipMetalRenderer > 0)
-            {
-                if (metalRenderer->isAttachedToView (view))
-                {
-                    metalRenderer->detach();
-                    setDeferredRepaintsToWholeFrame();
-                }
-
-                if (numFramesToSkipMetalRenderer > 0)
-                    --numFramesToSkipMetalRenderer;
-            }
-            else
-            {
-                if (! metalRenderer->isAttachedToView (view))
-                {
-                    metalRenderer->attach (view, getComponent().isOpaque());
-                    setDeferredRepaintsToWholeFrame();
-                }
-            }
+            if (metalRenderer != nullptr && metalRenderer->isAttachedToView (view))
+                metalRenderer->detach();
+        }
+        else
+        {
+            if (metalRenderer != nullptr && ! metalRenderer->isAttachedToView (view))
+                metalRenderer->attach (view, getComponent().isOpaque());
         }
 
         auto dispatchRectangles = [this]
         {
-           if (metalRenderer != nullptr && metalRenderer->isAttachedToView (view))
-               return metalRenderer->drawRectangleList (view,
-                                                        (float) [[view window] backingScaleFactor],
-                                                        [this] (CGContextRef ctx, CGRect r) { drawRectWithContext (ctx, r); },
-                                                        deferredRepaints);
+            if (metalRenderer != nullptr && metalRenderer->isAttachedToView (view))
+            {
+                return metalRenderer->drawRectangleList (view,
+                                                         (float) [[view window] backingScaleFactor],
+                                                         [this] (CGContextRef ctx, CGRect r) { drawRectWithContext (ctx, r); },
+                                                         deferredRepaints);
+            }
 
             for (auto& i : deferredRepaints)
                 [view setNeedsDisplayInRect: makeNSRect (i)];
@@ -1261,8 +1248,8 @@ public:
 
         const auto scale = getComponent().getDesktopScaleFactor();
 
-        auto pos            = ScalingHelpers::unscaledScreenPosToScaled (scale, convertToRectInt (flippedScreenRect (r)));
-        const auto original = ScalingHelpers::unscaledScreenPosToScaled (scale, convertToRectInt (flippedScreenRect ([window frame])));
+        auto pos            = detail::ScalingHelpers::unscaledScreenPosToScaled (scale, convertToRectInt (flippedScreenRect (r)));
+        const auto original = detail::ScalingHelpers::unscaledScreenPosToScaled (scale, convertToRectInt (flippedScreenRect ([window frame])));
 
         const auto screenBounds = Desktop::getInstance().getDisplays().getTotalBounds (true);
 
@@ -1281,7 +1268,7 @@ public:
         constrainer->checkBounds (pos, original, screenBounds,
                                   isStretchingTop, isStretchingLeft, isStretchingBottom, isStretchingRight);
 
-        return flippedScreenRect (makeNSRect (ScalingHelpers::scaledScreenPosToUnscaled (scale, pos)));
+        return flippedScreenRect (makeNSRect (detail::ScalingHelpers::scaledScreenPosToUnscaled (scale, pos)));
     }
 
     static void showArrowCursorIfNeeded()
@@ -1450,7 +1437,7 @@ public:
         const auto p = localToGlobal (convertToPointFloat ([view convertPoint: [sender draggingLocation] fromView: nil]));
 
         ComponentPeer::DragInfo dragInfo;
-        dragInfo.position = ScalingHelpers::screenPosToLocalPos (component, p).roundToInt();
+        dragInfo.position = detail::ScalingHelpers::screenPosToLocalPos (component, p).roundToInt();
 
         if (contentType == NSPasteboardTypeString)
             dragInfo.text = nsStringToJuce ([pasteboard stringForType: NSPasteboardTypeString]);
@@ -1579,6 +1566,14 @@ public:
 
     bool sendEventToInputContextOrComponent (NSEvent* ev)
     {
+        // In the case that an event was processed unsuccessfully in performKeyEquivalent and then
+        // posted back to keyDown by the system, this check will ensure that we don't attempt to
+        // process the same event a second time.
+        const auto newEvent = KeyEventAttributes::make (ev);
+
+        if (std::exchange (lastSeenKeyEvent, newEvent) == newEvent)
+            return false;
+
         // We assume that the event will be handled by the IME.
         // Occasionally, the inputContext may be sent key events like cmd+Q, which it will turn
         // into a noop: call and forward to doCommandBySelector:.
@@ -1611,6 +1606,73 @@ public:
     }
 
     //==============================================================================
+    class KeyEventAttributes
+    {
+        auto tie() const
+        {
+            return std::tie (type,
+                             modifierFlags,
+                             timestamp,
+                             windowNumber,
+                             characters,
+                             charactersIgnoringModifiers,
+                             keyCode,
+                             isRepeat);
+        }
+
+    public:
+        static std::optional<KeyEventAttributes> make (NSEvent* event)
+        {
+            const auto type = [event type];
+
+            if (type != NSEventTypeKeyDown && type != NSEventTypeKeyUp)
+                return {};
+
+            return KeyEventAttributes
+            {
+                type,
+                [event modifierFlags],
+                [event timestamp],
+                [event windowNumber],
+                nsStringToJuce ([event characters]),
+                nsStringToJuce ([event charactersIgnoringModifiers]),
+                [event keyCode],
+                static_cast<bool> ([event isARepeat])
+            };
+        }
+
+        bool operator== (const KeyEventAttributes& other) const { return tie() == other.tie(); }
+        bool operator!= (const KeyEventAttributes& other) const { return tie() != other.tie(); }
+
+    private:
+        KeyEventAttributes (NSEventType typeIn,
+                            NSEventModifierFlags flagsIn,
+                            NSTimeInterval timestampIn,
+                            NSInteger windowNumberIn,
+                            String charactersIn,
+                            String charactersIgnoringModifiersIn,
+                            unsigned short keyCodeIn,
+                            bool isRepeatIn)
+            : type (typeIn),
+              modifierFlags (flagsIn),
+              timestamp (timestampIn),
+              windowNumber (windowNumberIn),
+              characters (charactersIn),
+              charactersIgnoringModifiers (charactersIgnoringModifiersIn),
+              keyCode (keyCodeIn),
+              isRepeat (isRepeatIn)
+        {}
+
+        NSEventType type;
+        NSEventModifierFlags modifierFlags;
+        NSTimeInterval timestamp;
+        NSInteger windowNumber;
+        String characters;
+        String charactersIgnoringModifiers;
+        unsigned short keyCode;
+        bool isRepeat;
+    };
+
     NSWindow* window = nil;
     NSView* view = nil;
     WeakReference<Component> safeComponent;
@@ -1629,8 +1691,11 @@ public:
     int startOfMarkedTextInTextInputTarget = 0;
 
     Rectangle<float> lastSizeBeforeZoom;
+    Rectangle<float> boundsWhenRepaintsDeferred;
     RectangleList<float> deferredRepaints;
     uint32 lastRepaintTime;
+
+    std::optional<KeyEventAttributes> lastSeenKeyEvent;
 
     static ComponentPeer* currentlyFocusedPeer;
     static std::set<int> keysCurrentlyDown;
@@ -1869,7 +1934,6 @@ private:
     }
 
     //==============================================================================
-    int numFramesToSkipMetalRenderer = 0;
     std::unique_ptr<CoreGraphicsMetalLayerRenderer<NSView>> metalRenderer;
 
     std::vector<ScopedNotificationCenterObserver> scopedObservers;
@@ -2087,7 +2151,8 @@ struct JuceNSViewClass   : public NSViewComponentPeerWrapper<ObjCClass<NSView>>
         addMethod (@selector (performKeyEquivalent:), [] (id self, SEL s, NSEvent* ev) -> BOOL
         {
             if (auto* owner = getOwner (self))
-                return owner->sendEventToInputContextOrComponent (ev);
+                if (owner->sendEventToInputContextOrComponent (ev))
+                    return YES;
 
             return sendSuperclassMessage<BOOL> (self, s, ev);
         });
@@ -2304,7 +2369,7 @@ struct JuceNSViewClass   : public NSViewComponentPeerWrapper<ObjCClass<NSView>>
                                                                    : target->getTextBounds (codePointRange).getRectangle (0);
                         const auto areaOnDesktop = comp->localAreaToGlobal (rect);
 
-                        return flippedScreenRect (makeNSRect (ScalingHelpers::scaledScreenPosToUnscaled (areaOnDesktop)));
+                        return flippedScreenRect (makeNSRect (detail::ScalingHelpers::scaledScreenPosToUnscaled (areaOnDesktop)));
                     }
                 }
             }
@@ -2693,7 +2758,7 @@ bool KeyPress::isKeyCurrentlyDown (int keyCode)
 }
 
 //==============================================================================
-bool MouseInputSource::SourceList::addSource()
+bool detail::MouseInputSourceList::addSource()
 {
     if (sources.size() == 0)
     {
@@ -2704,7 +2769,7 @@ bool MouseInputSource::SourceList::addSource()
     return false;
 }
 
-bool MouseInputSource::SourceList::canUseTouch()
+bool detail::MouseInputSourceList::canUseTouch() const
 {
     return false;
 }

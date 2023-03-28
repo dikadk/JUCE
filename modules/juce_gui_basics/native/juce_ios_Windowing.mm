@@ -35,7 +35,7 @@ namespace juce
 
     // This is an internal list of callbacks (but currently used between modules)
     Array<AppInactivityCallback*> appBecomingInactiveCallbacks;
-}
+} // namespace juce
 
 #if JUCE_PUSH_NOTIFICATIONS
 @interface JuceAppStartupDelegate : NSObject <UIApplicationDelegate, UNUserNotificationCenterDelegate>
@@ -471,277 +471,6 @@ void LookAndFeel::playAlertSound()
 }
 
 //==============================================================================
-class iOSMessageBox
-{
-public:
-    iOSMessageBox (const MessageBoxOptions& opts,
-                   std::unique_ptr<ModalComponentManager::Callback>&& cb,
-                   bool deleteOnCompletion)
-        : callback (std::move (cb)),
-          shouldDeleteThis (deleteOnCompletion)
-    {
-        if (iOSGlobals::currentlyFocusedPeer != nullptr)
-        {
-            UIAlertController* alert = [UIAlertController alertControllerWithTitle: juceStringToNS (opts.getTitle())
-                                                                           message: juceStringToNS (opts.getMessage())
-                                                                    preferredStyle: UIAlertControllerStyleAlert];
-
-            addButton (alert, opts.getButtonText (0));
-            addButton (alert, opts.getButtonText (1));
-            addButton (alert, opts.getButtonText (2));
-
-            [iOSGlobals::currentlyFocusedPeer->controller presentViewController: alert
-                                                                       animated: YES
-                                                                     completion: nil];
-        }
-        else
-        {
-            // Since iOS8, alert windows need to be associated with a window, so you need to
-            // have at least one window on screen when you use this
-            jassertfalse;
-        }
-    }
-
-    int getResult()
-    {
-        jassert (callback == nullptr);
-
-        JUCE_AUTORELEASEPOOL
-        {
-            while (result < 0)
-                [[NSRunLoop mainRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.01]];
-        }
-
-        return result;
-    }
-
-    void buttonClicked (int buttonIndex) noexcept
-    {
-        result = buttonIndex;
-
-        if (callback != nullptr)
-            callback->modalStateFinished (result);
-
-        if (shouldDeleteThis)
-            delete this;
-    }
-
-private:
-    void addButton (UIAlertController* alert, const String& text)
-    {
-        if (! text.isEmpty())
-        {
-            const auto index = [[alert actions] count];
-
-            [alert addAction: [UIAlertAction actionWithTitle: juceStringToNS (text)
-                                                       style: UIAlertActionStyleDefault
-                                                     handler: ^(UIAlertAction*) { this->buttonClicked ((int) index); }]];
-        }
-    }
-
-    int result = -1;
-    std::unique_ptr<ModalComponentManager::Callback> callback;
-    const bool shouldDeleteThis;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (iOSMessageBox)
-};
-
-
-class iOSTextEditBox{
-    public:
-        iOSTextEditBox(const juce::String& title, const juce::String& message, NSString* button1, NSString* button2, const juce::String& textPlaceHolder, const juce::String& prepopulatedText, std::function<void(int,const juce::String&)>& cb)
-                : result (0), resultReceived (false), callback (cb)
-        {
-            if (iOSGlobals::currentlyFocusedPeer != nullptr)
-            {
-                UIAlertController* alert = [UIAlertController alertControllerWithTitle: juce::juceStringToNS (title)
-                                                                               message: juce::juceStringToNS (message)
-                                                                        preferredStyle: UIAlertControllerStyleAlert];
-                addButton (alert, button1, 0);
-                addButton (alert, button2, 1);
-                addTextEdit(alert, prepopulatedText, textPlaceHolder);
-
-                [iOSGlobals::currentlyFocusedPeer->controller presentViewController: alert
-                                                                           animated: YES
-                                                                         completion: nil];
-            }
-            else
-            {
-                // Since iOS8, alert windows need to be associated with a window, so you need to
-                // have at least one window on screen when you use this
-                jassertfalse;
-            }
-        }
-
-        void buttonClicked (UIAlertController* alert, const int buttonIndex) noexcept
-        {
-            result = buttonIndex;
-
-            UITextField *alertTextField = alert.textFields.firstObject;
-
-            NSLog(@"And the text is... %@!", alertTextField.text);
-            textResult = juce::nsStringToJuce(alertTextField.text);
-
-
-            callback(result, textResult);
-
-
-            delete this;
-        }
-
-    private:
-        int result;
-        juce::String textResult;
-        bool resultReceived;
-        std::function<void(int, const juce::String&)> callback;
-
-        void addButton (UIAlertController* alert, NSString* text, int index)
-        {
-            if (text != nil)
-                [alert addAction: [UIAlertAction actionWithTitle: text
-                                                           style: UIAlertActionStyleDefault
-                                                         handler: ^(UIAlertAction*) {
-                                                             this->buttonClicked (alert, index); }]];
-        }
-
-        void addTextEdit (UIAlertController* alert, const juce::String& prepopulatedText, const juce::String& text)
-        {
-            if (text.isNotEmpty()){
-                [alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-                    textField.placeholder = juceStringToNS(text);
-                    textField.text = juceStringToNS(prepopulatedText);
-                }];
-            }
-        }
-
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (iOSTextEditBox)
-    };
-
-//==============================================================================
-static int showDialog (const MessageBoxOptions& options,
-                       ModalComponentManager::Callback* callbackIn,
-                       AlertWindowMappings::MapFn mapFn)
-{
-   #if JUCE_MODAL_LOOPS_PERMITTED
-    if (callbackIn == nullptr)
-    {
-        JUCE_AUTORELEASEPOOL
-        {
-            jassert (mapFn != nullptr);
-
-            iOSMessageBox messageBox (options, nullptr, false);
-            return mapFn (messageBox.getResult());
-        }
-    }
-   #endif
-
-    const auto showBox = [options, callbackIn, mapFn]
-    {
-        new iOSMessageBox (options,
-                           AlertWindowMappings::getWrappedCallback (callbackIn, mapFn),
-                           true);
-    };
-
-    if (MessageManager::getInstance()->isThisTheMessageThread())
-        showBox();
-    else
-        MessageManager::callAsync (showBox);
-
-    return 0;
-}
-
-#if JUCE_MODAL_LOOPS_PERMITTED
-void JUCE_CALLTYPE NativeMessageBox::showMessageBox (MessageBoxIconType /*iconType*/,
-                                                     const String& title, const String& message,
-                                                     Component* /*associatedComponent*/)
-{
-    showDialog (MessageBoxOptions()
-                  .withTitle (title)
-                  .withMessage (message)
-                  .withButton (TRANS("OK")),
-                nullptr, AlertWindowMappings::messageBox);
-}
-
-int JUCE_CALLTYPE NativeMessageBox::show (const MessageBoxOptions& options)
-{
-    return showDialog (options, nullptr, AlertWindowMappings::noMapping);
-}
-#endif
-
-void JUCE_CALLTYPE NativeMessageBox::showMessageBoxAsync (MessageBoxIconType /*iconType*/,
-                                                          const String& title, const String& message,
-                                                          Component* /*associatedComponent*/,
-                                                          ModalComponentManager::Callback* callback)
-{
-    showDialog (MessageBoxOptions()
-                  .withTitle (title)
-                  .withMessage (message)
-                  .withButton (TRANS("OK")),
-                callback, AlertWindowMappings::messageBox);
-}
-
-bool JUCE_CALLTYPE NativeMessageBox::showOkCancelBox (MessageBoxIconType /*iconType*/,
-                                                      const String& title, const String& message,
-                                                      Component* /*associatedComponent*/,
-                                                      ModalComponentManager::Callback* callback)
-{
-    return showDialog (MessageBoxOptions()
-                         .withTitle (title)
-                         .withMessage (message)
-                         .withButton (TRANS("OK"))
-                         .withButton (TRANS("Cancel")),
-                       callback, AlertWindowMappings::okCancel) != 0;
-}
-
-int JUCE_CALLTYPE NativeMessageBox::showYesNoCancelBox (MessageBoxIconType /*iconType*/,
-                                                        const String& title, const String& message,
-                                                        Component* /*associatedComponent*/,
-                                                        ModalComponentManager::Callback* callback)
-{
-    return showDialog (MessageBoxOptions()
-                         .withTitle (title)
-                         .withMessage (message)
-                         .withButton (TRANS("Yes"))
-                         .withButton (TRANS("No"))
-                         .withButton (TRANS("Cancel")),
-                       callback, AlertWindowMappings::yesNoCancel);
-}
-
-int JUCE_CALLTYPE NativeMessageBox::showYesNoBox (MessageBoxIconType /*iconType*/,
-                                                  const String& title, const String& message,
-                                                  Component* /*associatedComponent*/,
-                                                  ModalComponentManager::Callback* callback)
-{
-    return showDialog (MessageBoxOptions()
-                         .withTitle (title)
-                         .withMessage (message)
-                         .withButton (TRANS("Yes"))
-                         .withButton (TRANS("No")),
-                       callback, AlertWindowMappings::okCancel);
-}
-
-void JUCE_CALLTYPE NativeMessageBox::showAsync (const MessageBoxOptions& options,
-                                                ModalComponentManager::Callback* callback)
-{
-    showDialog (options, callback, AlertWindowMappings::noMapping);
-}
-
-void JUCE_CALLTYPE NativeMessageBox::showAsync (const MessageBoxOptions& options,
-                                                std::function<void (int)> callback)
-{
-    showAsync (options, ModalCallbackFunction::create (callback));
-}
-
-void JUCE_CALLTYPE NativeMessageBox::showTextEditBox (const juce::String& title, const juce::String& message,
-                                                          const juce::String& textPlaceholder,
-                                                          const juce::String& prepopulatedText,
-                                                          std::function<void(int, const juce::String&)> callback)
-{
-    std::unique_ptr<iOSTextEditBox> mb (new iOSTextEditBox (title, message, @"Cancel", @"Save", textPlaceholder, prepopulatedText, callback));
-    mb.release();
-}
-
-//==============================================================================
 bool DragAndDropContainer::performExternalDragDropOfFiles (const StringArray&, bool, Component*, std::function<void()>)
 {
     jassertfalse;    // no such thing on iOS!
@@ -770,15 +499,15 @@ bool Desktop::isScreenSaverEnabled()
 }
 
 //==============================================================================
-bool juce_areThereAnyAlwaysOnTopWindows()
+bool detail::WindowingHelpers::areThereAnyAlwaysOnTopWindows()
 {
     return false;
 }
 
 //==============================================================================
-Image juce_createIconForFile (const File&)
+Image detail::WindowingHelpers::createIconForFile (const File&)
 {
-    return Image();
+    return {};
 }
 
 //==============================================================================
@@ -794,13 +523,13 @@ String SystemClipboard::getTextFromClipboard()
 }
 
 //==============================================================================
-bool MouseInputSource::SourceList::addSource()
+bool detail::MouseInputSourceList::addSource()
 {
     addSource (sources.size(), MouseInputSource::InputSourceType::touch);
     return true;
 }
 
-bool MouseInputSource::SourceList::canUseTouch()
+bool detail::MouseInputSourceList::canUseTouch() const
 {
     return true;
 }
@@ -971,7 +700,7 @@ void Displays::findDisplays (float masterScale)
                         if (value == nullptr)
                             return {};
 
-                        auto* display = getPrimaryDisplayImpl (Desktop::getInstance().getDisplays());
+                        auto* display = Desktop::getInstance().getDisplays().getPrimaryDisplay();
 
                         if (display == nullptr)
                             return {};

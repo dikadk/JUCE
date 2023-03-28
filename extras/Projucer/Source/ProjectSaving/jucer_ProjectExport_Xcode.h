@@ -771,10 +771,16 @@ public:
                                            "Since JUCE 4.2, this is instead done using \"AU/VST/VST2/AAX Binary Location\" in the Xcode (OS X) configuration settings.\n\n"
                                            "Click 'Update' to remove the script (otherwise your plug-in may not compile correctly).";
 
-            if (AlertWindow::showOkCancelBox (MessageBoxIconType::WarningIcon,
-                                              "Project settings: " + project.getDocumentTitle(),
-                                              alertWindowText, "Update", "Cancel", nullptr, nullptr))
-                postbuildCommandValue.resetToDefault();
+            auto options = MessageBoxOptions::makeOptionsOkCancel (MessageBoxIconType::WarningIcon,
+                                                                   "Project settings: " + project.getDocumentTitle(),
+                                                                   alertWindowText,
+                                                                   "Update",
+                                                                   "Cancel");
+            messageBox = AlertWindow::showScopedAsync (options, [this] (int result)
+            {
+                if (result != 0)
+                    postbuildCommandValue.resetToDefault();
+            });
         }
     }
 
@@ -1718,8 +1724,8 @@ public:
             s.set ("COMBINE_HIDPI_IMAGES", "YES");
 
             {
-                StringArray linkerFlags, librarySearchPaths;
-                getLinkerSettings (config, linkerFlags, librarySearchPaths);
+                StringArray linkerFlags;
+                getLinkerSettings (config, linkerFlags);
 
                 for (const auto& weakFramework : owner.xcodeWeakFrameworks)
                     linkerFlags.add ("-weak_framework " + weakFramework);
@@ -1727,6 +1733,7 @@ public:
                 if (linkerFlags.size() > 0)
                     s.set ("OTHER_LDFLAGS", linkerFlags.joinIntoString (" ").quoted());
 
+                StringArray librarySearchPaths;
                 librarySearchPaths.addArray (config.getLibrarySearchPaths());
 
                 if (type == LV2PlugIn)
@@ -1819,23 +1826,13 @@ public:
         }
 
         //==============================================================================
-        void getLinkerSettings (const BuildConfiguration& config, StringArray& flags, StringArray& librarySearchPaths) const
+        void getLinkerSettings (const BuildConfiguration& config, StringArray& flags) const
         {
             if (getTargetFileType() == pluginBundle)
                 flags.add (owner.isiOS() ? "-bitcode_bundle" : "-bundle");
 
             if (type != Target::SharedCodeTarget && type != Target::LV2TurtleProgram)
             {
-                Array<build_tools::RelativePath> extraLibs;
-
-                addExtraLibsForTargetType (config, extraLibs);
-
-                for (auto& lib : extraLibs)
-                {
-                    flags.add (getLinkerFlagForLib (lib.getFileNameWithoutExtension()));
-                    librarySearchPaths.add (owner.getSearchPathForStaticLibrary (lib));
-                }
-
                 if (owner.project.isAudioPluginProject())
                 {
                     if (owner.getTargetOfType (Target::SharedCodeTarget) != nullptr)
@@ -2014,19 +2011,6 @@ public:
 
             if (owner.isOSX())
                 xcodeFrameworks.add ("AudioUnit");
-        }
-
-        void addExtraLibsForTargetType  (const BuildConfiguration& config, Array<build_tools::RelativePath>& extraLibs) const
-        {
-            if (type == AAXPlugIn)
-            {
-                auto aaxLibsFolder = build_tools::RelativePath (owner.getAAXPathString(), build_tools::RelativePath::projectFolder).getChildFile ("Libs");
-
-                String libraryPath (config.isDebug() ? "Debug" : "Release");
-                libraryPath += "/libAAXLibrary_libcpp.a";
-
-                extraLibs.add   (aaxLibsFolder.getChildFile (libraryPath));
-            }
         }
 
         //==============================================================================
@@ -3659,6 +3643,7 @@ private:
                                  iosContentSharingValue, iosBackgroundAudioValue, iosBackgroundBleValue, iosPushNotificationsValue, iosAppGroupsValue, iCloudPermissionsValue,
                                  networkingMulticastValue, iosDevelopmentTeamIDValue, iosAppGroupsIDValue, keepCustomXcodeSchemesValue, useHeaderMapValue, customLaunchStoryboardValue,
                                  exporterBundleIdentifierValue, suppressPlistResourceUsageValue, useLegacyBuildSystemValue, buildNumber;
+    ScopedMessageBox messageBox;
 
     struct SandboxFileAccessProperty
     {

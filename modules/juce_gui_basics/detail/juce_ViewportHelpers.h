@@ -23,4 +23,27 @@
   ==============================================================================
 */
 
-#include "VST/juce_VST_Wrapper.mm"
+namespace juce::detail
+{
+
+struct ViewportHelpers
+{
+    ViewportHelpers() = delete;
+
+    static bool wouldScrollOnEvent (const Viewport* vp, const MouseInputSource& src)
+    {
+        if (vp != nullptr)
+        {
+            switch (vp->getScrollOnDragMode())
+            {
+                case Viewport::ScrollOnDragMode::all:           return true;
+                case Viewport::ScrollOnDragMode::nonHover:      return ! src.canHover();
+                case Viewport::ScrollOnDragMode::never:         return false;
+            }
+        }
+
+        return false;
+    }
+};
+
+} // namespace juce::detail
