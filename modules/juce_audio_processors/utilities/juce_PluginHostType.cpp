@@ -332,6 +332,7 @@ PluginHostType::HostType PluginHostType::getHostType()
 
    #elif JUCE_IOS
    #elif JUCE_ANDROID
+   #elif JUCE_WASM
    #else
     #error
    #endif

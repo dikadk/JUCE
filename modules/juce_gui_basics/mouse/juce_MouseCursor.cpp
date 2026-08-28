@@ -35,6 +35,17 @@
 namespace juce
 {
 
+#if JUCE_WASM
+class MouseCursor::PlatformSpecificHandle
+{
+public:
+    PlatformSpecificHandle (const MouseCursor::StandardCursorType) {}
+    PlatformSpecificHandle (const detail::CustomMouseCursorInfo&) {}
+
+    static void showInWindow (PlatformSpecificHandle*, ComponentPeer*) {}
+};
+#endif
+
 class MouseCursor::SharedCursorHandle
 {
 public:

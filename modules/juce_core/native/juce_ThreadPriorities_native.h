@@ -89,6 +89,14 @@ struct ThreadPriorities
         { Thread::Priority::low,        THREAD_PRIORITY_LOWEST },
         { Thread::Priority::background, THREAD_PRIORITY_IDLE },
        #endif
+
+       #if JUCE_WASM
+        { Thread::Priority::highest,    0 },
+        { Thread::Priority::high,       0 },
+        { Thread::Priority::normal,     0 },
+        { Thread::Priority::low,        0 },
+        { Thread::Priority::background, 0 },
+       #endif
     };
 
     static_assert (std::size (table) == 5,

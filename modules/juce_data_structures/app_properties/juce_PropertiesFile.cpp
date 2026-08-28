@@ -112,6 +112,10 @@ File PropertiesFile::Options::getDefaultFile() const
 
     dir = dir.getChildFile (folderName.isNotEmpty() ? folderName
                                                     : applicationName);
+
+   #elif JUCE_WASM
+    auto dir = File ("/").getChildFile (folderName.isNotEmpty() ? folderName
+                                                                : applicationName);
    #endif
 
     return (filenameSuffix.startsWithChar (L'.')

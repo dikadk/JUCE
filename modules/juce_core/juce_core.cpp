@@ -275,6 +275,8 @@
 //==============================================================================
 #elif JUCE_WASM
  #include "native/juce_SystemStats_wasm.cpp"
+ #include "native/juce_Files_wasm.cpp"
+ #include "native/juce_Threads_linux.cpp"
  #include "native/juce_PlatformTimer_generic.cpp"
 #endif
 

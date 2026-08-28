@@ -35,6 +35,17 @@
 namespace juce
 {
 
+#if JUCE_WASM
+class Desktop::NativeDarkModeChangeDetectorImpl
+{
+};
+
+std::unique_ptr<Desktop::NativeDarkModeChangeDetectorImpl> Desktop::createNativeDarkModeChangeDetectorImpl()
+{
+    return {};
+}
+#endif
+
 Desktop::Desktop()
     : mouseSources (new detail::MouseInputSourceList()),
       masterScaleFactor ((float) getDefaultMasterScale()),

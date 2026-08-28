@@ -32,6 +32,8 @@
   ==============================================================================
 */
 
+#include <emscripten/emscripten.h>
+
 namespace juce
 {
 
@@ -57,6 +59,22 @@ String SystemStats::getComputerName()           { return {}; }
 String SystemStats::getUserLanguage()           { return {}; }
 String SystemStats::getUserRegion()             { return {}; }
 String SystemStats::getDisplayLanguage()        { return {}; }
+
+File File::getSpecialLocation (const SpecialLocationType type)
+{
+    switch (type)
+    {
+        case tempDirectory:                    return File ("/tmp");
+        case currentExecutableFile:
+        case currentApplicationFile:
+        case invokedExecutableFile:
+        case hostApplicationPath:              return File ("/RadioMamaWasm");
+        case commonApplicationDataDirectory:
+        case commonDocumentsDirectory:
+        case globalApplicationsDirectory:      return File ("/");
+        default:                               return File ("/home/web_user");
+    }
+}
 
 //==============================================================================
 void CPUInformation::initialise() noexcept

@@ -217,6 +217,16 @@ namespace juce
 
 #endif
 
+#if JUCE_WASM
+namespace juce
+{
+auto ump::Endpoints::Impl::Native::make (EndpointsListener&) -> std::unique_ptr<Native>
+{
+    return nullptr;
+}
+} // namespace juce
+#endif
+
 #if (JUCE_LINUX || JUCE_BSD || JUCE_MAC || JUCE_WINDOWS) && JUCE_JACK
  /* Got an include error here? If so, you've either not got jack-audio-connection-kit
     installed, or you've not got your paths set up correctly to find its header files.
