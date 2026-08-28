@@ -452,7 +452,24 @@ public:
                 }
 
                 glViewport (0, 0, viewportArea.getWidth(), viewportArea.getHeight());
-                drawComponentBuffer();
+
+                if (context.customComponentContextFactory != nullptr)
+                {
+                    // A custom renderer (Samurai Rive spike) leaves GL state
+                    // the textured-quad path can't rely on (drawComponentBuffer
+                    // renders black) — present the cached framebuffer with a
+                    // plain blit instead.
+                    glBindFramebuffer (GL_READ_FRAMEBUFFER, cachedImageFrameBuffer.getFrameBufferID());
+                    glBindFramebuffer (GL_DRAW_FRAMEBUFFER, 0);
+                    glBlitFramebuffer (0, 0, cachedImageFrameBuffer.getWidth(), cachedImageFrameBuffer.getHeight(),
+                                       0, 0, viewportArea.getWidth(), viewportArea.getHeight(),
+                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                    glBindFramebuffer (GL_FRAMEBUFFER, 0);
+                }
+                else
+                {
+                    drawComponentBuffer();
+                }
             }
         }
 
@@ -561,7 +578,14 @@ public:
             clearRegionInFrameBuffer (invalid);
 
             {
-                std::unique_ptr<LowLevelGraphicsContext> g (createOpenGLGraphicsContext (context, cachedImageFrameBuffer));
+                std::unique_ptr<LowLevelGraphicsContext> g;
+
+                if (context.customComponentContextFactory != nullptr)
+                    g = context.customComponentContextFactory (context, cachedImageFrameBuffer);
+
+                if (g == nullptr)
+                    g = createOpenGLGraphicsContext (context, cachedImageFrameBuffer);
+
                 g->clipToRectangleList (invalid);
                 g->addTransform (transform);
 

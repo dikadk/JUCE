@@ -288,6 +288,17 @@ public:
     */
     void setComponentPaintingEnabled (bool shouldPaintComponent) noexcept;
 
+    /** Optional hook that replaces the LowLevelGraphicsContext used to paint
+        the attached component tree into the cached framebuffer.
+
+        Called on the GL thread (message manager locked) with the framebuffer
+        the components must be rendered into; returning nullptr falls back to
+        the built-in OpenGL renderer. Local addition for the Samurai YUP/Rive
+        render spike — see Mrpbm docs/plans/plan-yup-render-spike.md.
+    */
+    std::function<std::unique_ptr<LowLevelGraphicsContext> (OpenGLContext&, OpenGLFrameBuffer&)>
+        customComponentContextFactory;
+
     /** Enables or disables continuous repainting.
         If set to true, the context will run a loop, re-rendering itself without waiting
         for triggerRepaint() to be called, at a frequency determined by the swap interval

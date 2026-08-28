@@ -340,7 +340,21 @@ bool MessageManager::Lock::tryAcquire (bool lockIsMandatory) const noexcept
     {
         {
             std::unique_lock lock { mutex };
-            condvar.wait (lock, [&] { return std::exchange (abortWait, false); });
+
+            if (lockIsMandatory)
+            {
+                condvar.wait (lock, [&] { return std::exchange (abortWait, false); });
+            }
+            else if (! condvar.wait_for (lock, std::chrono::milliseconds (500),
+                                         [&] { return std::exchange (abortWait, false); }))
+            {
+                // The wake-up never arrived (seen on Android when the GL render
+                // thread posts while the message queue is idle) — give up this
+                // attempt instead of blocking the render thread forever; the
+                // caller treats a failed try-lock as "retry next time round".
+                Logger::writeToLog ("MMLock timeout BM " + String::toHexString ((pointer_sized_int) blockingMessage.get()));
+                break;
+            }
         }
 
         if (acquired)
