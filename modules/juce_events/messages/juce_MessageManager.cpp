@@ -371,9 +371,14 @@ bool MessageManager::Lock::tryAcquire (bool lockIsMandatory) const noexcept
 
     blockingMessage->stopWaiting();
     blockingMessage = nullptr;
+
+    {
+        const std::scoped_lock lock { mutex };
+        acquired = false;
+    }
+
     return false;
 }
-
 void MessageManager::Lock::exit() const noexcept
 {
     const auto wasAcquired = [&]
@@ -403,7 +408,15 @@ void MessageManager::Lock::exit() const noexcept
 
 void MessageManager::Lock::abort() const noexcept
 {
-    setAcquired (false);
+    // abort() is documented to interrupt a thread that is *waiting* in
+    // tryEnter().  Clearing `acquired` after the render thread has already
+    // gained the lock makes exit() skip BlockingMessage::stopWaiting(), which
+    // leaves the Android message thread blocked in messageCallback forever.
+    const ScopeGuard scope { [&] { condvar.notify_one(); } };
+    const std::scoped_lock lock { mutex };
+
+    if (! acquired)
+        abortWait = true;
 }
 
 void MessageManager::Lock::setAcquired (bool x) const noexcept
