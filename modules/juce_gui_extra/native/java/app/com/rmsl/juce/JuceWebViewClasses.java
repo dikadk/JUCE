@@ -309,6 +309,8 @@ public class JuceWebViewClasses
 
             WebSettings settings = getSettings();
             settings.setJavaScriptEnabled (true);
+            // Mrpbm: web UIs keep their settings in window.localStorage, which is null unless DOM storage is enabled.
+            settings.setDomStorageEnabled (true);
             settings.setBuiltInZoomControls (true);
             settings.setDisplayZoomControls (false);
             settings.setSupportMultipleWindows (true);
